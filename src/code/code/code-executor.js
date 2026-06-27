@@ -268,7 +268,8 @@ class CodeExecutor {
   constructor(options = {}) {
     const opts = options || {};
 
-    this._hf = opts.hf || null;
+   // this._hf = opts.hf || null;
+   this._hf = null;  
     this._name = 'CodeExecutor';
     this._initialized = true;
 
@@ -296,7 +297,11 @@ class CodeExecutor {
 
     console.error(`[CodeExecutor] 初始化完成. 可用执行器: ${JSON.stringify(this._availableExecutors)}`);
   }
-
+  setHeartFlow(hf) {
+    this._hf = hf;
+    console.log('[CodeExecutor] HeartFlow connected');
+    return this;
+  }
   /**
    * 检查 shell 是否可用
    * @private

@@ -110,9 +110,9 @@ const _MoodEvolution = _lazy('moodEvolution', () => { try { return require('../e
 const _VERSION = _lazy('version', () => require('./version.js'));
 
 // ★ 代码引擎 — 惰性加载
-const _CodeExecutor = _lazy('codeExecutor', () => require('../code/code/code-executor.js'));
-const _CodePlanner = _lazy('codePlanner', () => require('../code/code/code-planner.js'));
-const _CodeWriter = _lazy('codeWriter', () => require('../code/code/code-writer.js'));
+const _CodeExecutor = _lazy('codeExecutor', () => require('../../code/code/code-executor.js'));
+const _CodePlanner = _lazy('codePlanner', () => require('../../code/code/code-planner.js'));
+const _CodeWriter = _lazy('codeWriter', () => require('../../code/code/code-writer.js'));
 
 // v3.0 — 交流层模块
 const _UserToLLM = _lazy('userToLLM', () => require('../bridge/user-to-llm.js'));
@@ -266,9 +266,40 @@ class HeartFlow {
     this.ethics = null;
     this.transmission = null;
   }
-
   // ─── Lifecycle ───────────────────────────────────────────────────────────
+  // Constructor ke baad yeh add karo
+    // CodeExecutor ke liye getter
+  get codeExecutor() {
+    if (!this._codeExecutorInstance && this._CodeExecutorClass) {
+      this._codeExecutorInstance = new this._CodeExecutorClass();
+      if (this._codeExecutorInstance.setHeartFlow) {
+        this._codeExecutorInstance.setHeartFlow(this);
+      }
+    }
+    return this._codeExecutorInstance;
+  }
 
+  // CodePlanner ke liye getter
+  get codePlanner() {
+    if (!this._codePlannerInstance && this._CodePlannerClass) {
+      this._codePlannerInstance = new this._CodePlannerClass();
+      if (this._codePlannerInstance.setHeartFlow) {
+        this._codePlannerInstance.setHeartFlow(this);
+      }
+    }
+    return this._codePlannerInstance;
+  }
+
+  // CodeWriter ke liye getter
+  get codeWriter() {
+    if (!this._codeWriterInstance && this._CodeWriterClass) {
+      this._codeWriterInstance = new this._CodeWriterClass();
+      if (this._codeWriterInstance.setHeartFlow) {
+        this._codeWriterInstance.setHeartFlow(this);
+      }
+    }
+    return this._codeWriterInstance;
+  }
   start() {
     if (this.started) return;
     this.startTime = Date.now();
@@ -708,17 +739,22 @@ class HeartFlow {
       this.adaptivePlanner = new (APMod.AdaptivePlanner)();
     } catch (e) { this._initErrors.push({ module: 'adaptivePlanner', error: e.message }); }
 
+    // YEH ADD KARO ✅ - LAZY LOADING
     try {
       const CEMod2 = _CodeExecutor();
-      this.codeExecutor = new (CEMod2.CodeExecutor)();
+      this._CodeExecutorClass = CEMod2.CodeExecutor;  // Class store karo
+      this._codeExecutorInstance = null;  // Abhi instance nahi banayenge
     } catch (e) { /* codeExecutor optional */ }
+    // YEH ADD KARO ✅
     try {
       const CEMod3 = _CodePlanner();
-      this.codePlanner = new (CEMod3.CodePlanner)();
+      this._CodePlannerClass = CEMod3.CodePlanner;
+      this._codePlannerInstance = null;
     } catch (e) { /* codePlanner optional */ }
     try {
       const CEMod4 = _CodeWriter();
-      this.codeWriter = new (CEMod4.CodeWriter)();
+      this._CodeWriterClass = CEMod4.CodeWriter;
+      this._codeWriterInstance = null;
     } catch (e) { /* codeWriter optional */ }
 
     // ─── 推理层 & 情感自主层 — 必须在 ThoughtChain 之前注册 ────────────────
@@ -742,6 +778,7 @@ class HeartFlow {
     }
 
     // ─── Thought Chain 初始化 ───────────────────────────────────────────────
+    /*
     try {
       const TCMod = _ThoughtChain();
       this.thoughtChain = new (TCMod.ThoughtChain)(this);
@@ -768,6 +805,7 @@ class HeartFlow {
       const { Pipeline } = require('../workflow/pipeline.js');
       this.pipeline = new Pipeline({ heartflow: this });
     } catch (e) { this._initErrors.push({ module: 'pipeline', error: e.message }); }
+    */
 
     // v3.0 — 交流层模块初始化
     try {
@@ -971,17 +1009,18 @@ class HeartFlow {
       // v1.0.0 — 底层认知地面
       'cognitionGround',
       // v5.0.0 — 判断引擎
-      'judgmentEngine',
+      //'judgmentEngine',
       // v5.0.0 — 管道引擎
-      'pipeline',
+      //'pipeline',
       // v5.1.0 — 自省
-      'heartflow',
+      //'heartflow',
     ];
     for (const name of subsystemNames) {
       if (this[name] !== null && this[name] !== undefined) {
         this._modules[name] = this[name];
       }
     }
+
   }
 
   async stop() {
@@ -1413,12 +1452,11 @@ class HeartFlow {
               this['codeGenerator'] = mod;
               this._modules['codeGenerator'] = mod;
             }
-          } else if (subsystem === 'codeExecutor') {
-            mod = new Ctor({ hf: this });
-          } else if (subsystem === 'codeVerifier') {
-            mod = new Ctor({ hf: this });
-          } else if (subsystem === 'codePlanner') {
-            mod = new Ctor({ hf: this });
+          } else if (subsystem === 'codeExecutor' || subsystem === 'codeVerifier' || subsystem === 'codePlanner') {
+            mod = new Ctor();
+            if (mod.setHeartFlow) {
+              mod.setHeartFlow(this);
+            }
           } else {
             mod = new Ctor(entry.args);
           }
