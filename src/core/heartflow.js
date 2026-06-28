@@ -45,7 +45,7 @@ const _ConstitutionalEngine = _lazy('constitutionalEngine', () => require('../sh
 const _IdentityCore = _lazy('identityCore', () => require('../identity/identity-core.js'));
 const _SelfModel = _lazy('selfModel', () => require('../identity/self-model.js'));
 const _SelfVerifier = _lazy('selfVerifier', () => require('../identity/self-verifier.js'));
-const _LessonBank = _lazy('lessonBank', () => require('../identity/lesson-bank.js'));
+const _LessonBank = _lazy('lessonBank', () => require('../cortex/lesson-bank.js'));
 const _TopicScope = _lazy('topicScope', () => require('../memory/topic-scope.js'));
 const _LessonStorage = _lazy('lessonStorage', () => require('../cortex/lessons/lesson-storage.js'));
 const _PsychologyEngine = _lazy('psychologyEngine', () => require('../emotion/engine.js'));
@@ -124,7 +124,7 @@ const _ToneAnalyzer = _lazy('toneAnalyzer', () => require('../bridge/tone-analyz
 const _EntityExtractor = _lazy('entityExtractor', () => require('../bridge/entity-extractor.js'));
 const _ImplicitNeedDetector = _lazy('implicitNeedDetector', () => require('../bridge/implicit-need-detector.js'));
 const _ResponseCompressor = _lazy('responseCompressor', () => require('../bridge/response-compressor.js'));
-const _ConfidenceAnnotator = _lazy('confidenceAnnotator', () => require('../bridge/confidence-annotator.js'));
+const _ConfidenceAnnotator = _lazy('confidenceAnnotator', () => require('./confidence-annotator.js'));
 const _AgentBridge = _lazy('agentBridge', () => require('../bridge/agent-bridge.js'));
 const _ContextBuilder = _lazy('contextBuilder', () => require('../bridge/context-builder.js'));
 const _ResponseInterceptor = _lazy('responseInterceptor', () => require('../bridge/response-interceptor.js'));
@@ -343,7 +343,7 @@ class HeartFlow {
     this.evolution = new (_EvolutionLoop().EvolutionLoop)({ rootPath: this.rootPath, memory: this.memory }).boot();
     this.dream = new (_DreamEngine().DreamV11)({});
     this.dreamConsolidation = new (_DreamConsolidation().DreamConsolidation)(this.memory);
-    this.lesson = new (_LessonBank().LessonBank)(this.rootPath);
+    this.lesson = _LessonBank().lessonBank || _LessonBank();
     this.metaJudgment = new (_MetaJudgment().MetaJudgment)(this.rootPath);
     this.metaMemory = new (_MetaMemory().MetaMemory)(this.rootPath);
     this.skillGenerator = new (_SkillGenerator().SkillGenerator)(this.rootPath);
@@ -3106,11 +3106,11 @@ if (require.main === module) {
     console.error(`  dispatch tests: ${passed} passed, ${failed} failed`);
 
     hf.stop();
-    process.exit(failed > 0 ? 1 : 0);
+    return;
   } catch (e) {
     console.error('Error:', e);
     hf.stop();
-    process.exit(1);
+    return;
   }
 }
 

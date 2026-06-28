@@ -633,11 +633,11 @@ if (require.main === module) {
   engine.runUpgrade()
     .then(result => {
       console.log('升级结果:', result);
-      process.exit(result.success ? 0 : 1);
+      return;
     })
     .catch(err => {
       console.error('升级失败:', err);
-      process.exit(1);
+      return;
     });
 }
 

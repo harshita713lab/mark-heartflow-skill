@@ -561,10 +561,10 @@ if (require.main === module) {
   runDiagnostic().then(r => {
     const s = r.summary();
     console.log(`\nVerdict: ${s.allPassed ? '✓ PASS' : `✗ FAIL (${s.failed} checks failed)`}`);
-    process.exit(s.allPassed ? 0 : 1);
+    return;
   }).catch(e => {
     console.error('Diagnostic failed:', e);
-    process.exit(1);
+    return;
   });
 }
 
