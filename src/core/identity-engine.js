@@ -121,7 +121,19 @@ class IdentityAnchor {
       ? `符合身份: ${alignments.join(', ')}`
       : '中性行为';
   }
-  
+
+  // maratsultanov2 feedback (#1462): Position - Coherence + harmony status
+  computeHarmonyStatus(position, coherence) {
+    const p = Number(position) || 0;
+    const c = Number(coherence) || 0;
+    const raw = p - c; // divergence trace
+    const clamped = Math.max(-1, Math.min(1, raw / 100));
+    let status = "stable";
+    if (Math.abs(clamped) > 0.6) status = "divergent";
+    else if (Math.abs(clamped) > 0.3) status = "drifting";
+    return { divergence: raw, normalized: clamped, status, timestamp: Date.now() };
+  }
+
   /**
    * 生成身份声明 - 用于自我介绍
    */

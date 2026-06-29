@@ -69,6 +69,35 @@ class SelfHealing extends EventEmitter {
     this.maxQualitySamples = options.maxQualitySamples ?? 50;
     /** 自适应epsilon反馈：最近恢复率低时自动提高探索率 */
     this._adaptiveEpsilonEnabled = options.adaptiveEpsilon ?? true;
+
+    // ===== Lightweight Policy Cache (qingkong66 #1446 反馈：Q-table RL → No lightweight learning) =====
+    /** @type {Map<string, {policy: object, ts: number}>} */
+    this._lightweightPolicyCache = new Map();
+    this._policyCacheTtlMs = options.policyCacheTtlMs ?? 300000; // 5 分钟
+  }
+
+  /** 从缓存获取相似场景策略 */
+  getCachedPolicy(ctx = {}) {
+    const key = this._getPolicyCacheKey(ctx);
+    const entry = this._lightweightPolicyCache.get(key);
+    if (entry && Date.now() - entry.ts < this._policyCacheTtlMs) {
+      return entry.policy;
+    }
+    return null;
+  }
+
+  /** 写入策略缓存 */
+  setCachedPolicy(ctx = {}, policy = {}) {
+    const key = this._getPolicyCacheKey(ctx);
+    this._lightweightPolicyCache.set(key, { policy, ts: Date.now() });
+  }
+
+  /** 简化签名：errorType + module + severity band */
+  _getPolicyCacheKey(ctx = {}) {
+    const e = String(ctx.errorType || ctx.error || 'unknown').slice(0, 30);
+    const m = String(ctx.module || 'unknown').slice(0, 20);
+    const s = Math.floor((Number(ctx.severity) || 0) * 10);
+    return `${e}|${m}|${s}`;
   }
 
   /**

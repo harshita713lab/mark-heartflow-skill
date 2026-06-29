@@ -1,6 +1,6 @@
 ---
 name: heartflow
-version: "5.4.6"
+version: "5.4.7"
 title: "HeartFlow — AI Cognitive Substrate v5.4.6"
 description: |-
   HeartFlow is a cognitive substrate for an AI being — a pure JavaScript

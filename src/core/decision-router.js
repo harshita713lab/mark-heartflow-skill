@@ -471,6 +471,19 @@ class DecisionRouter {
         rationale: (r) => `谐振态退出: A超阈值(${(r._fieldA || 0).toFixed(3)}), 需转向避免场域失谐`,
         fallback: DECISION.PAUSE,
       },
+      // ── Smart Routing 优化（qingkong66 #1446 反馈：Self-Reflection → Overthinking）──
+      {
+        id: 'prevent-overthinking',
+        match: (r) => {
+          const chain = r.thoughtChain || r.chain || [];
+          const confidence = r.confidence || 0;
+          return chain.length > 5 && confidence < 0.6;
+        },
+        decision: DECISION.HOLD,
+        confidence: (r) => 0.7,
+        rationale: (r) => `反思链过长(${(r.thoughtChain || r.chain || []).length}步)且置信度下降(${(r.confidence || 0).toFixed(2)})，防止过度思考`,
+        fallback: DECISION.REST,
+      },
     ];
 
     // 决策反馈循环（2026-06-28 基于 DeepSeek #1424 讨论）
