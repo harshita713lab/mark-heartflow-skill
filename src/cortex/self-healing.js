@@ -100,6 +100,103 @@ class SelfHealing extends EventEmitter {
     return `${e}|${m}|${s}`;
   }
 
+  // ===== Provider Health Check (qingkong66 #1446 反馈：Provider 健康检查) =====
+  /** @type {Map<string, {healthy: boolean, lastCheck: number, latency: number, errors: number}>} */
+  _providerHealth = new Map();
+  _providerHealthTtlMs = 60000; // 1 分钟缓存
+
+  /**
+   * 记录 provider 调用结果
+   * @param {string} providerName
+   * @param {object} result - { success: boolean, latency: number, error?: string }
+   */
+  recordProviderCall(providerName = 'default', result = {}) {
+    const entry = this._providerHealth.get(providerName) || {
+      healthy: true, lastCheck: 0, latency: 0, errors: 0, total: 0
+    };
+    entry.total = (entry.total || 0) + 1;
+    entry.lastCheck = Date.now();
+    entry.latency = result.latency || 0;
+    if (result.success === false) {
+      entry.errors = (entry.errors || 0) + 1;
+      entry.healthy = entry.errors < 3; // 连续3次失败标记为不健康
+    } else {
+      entry.errors = 0;
+      entry.healthy = true;
+    }
+    this._providerHealth.set(providerName, entry);
+  }
+
+  /**
+   * 获取 provider 健康状态
+   * @param {string} providerName
+   * @returns {object} { healthy, latency, errorRate, recommendation }
+   */
+  getProviderHealth(providerName = 'default') {
+    const entry = this._providerHealth.get(providerName);
+    if (!entry || Date.now() - entry.lastCheck > this._providerHealthTtlMs) {
+      return { healthy: true, latency: 0, errorRate: 0, recommendation: 'no-data' };
+    }
+    const errorRate = entry.total > 0 ? entry.errors / entry.total : 0;
+    let recommendation = 'use';
+    if (!entry.healthy) recommendation = 'failover';
+    else if (errorRate > 0.3) recommendation = 'degraded';
+    else if (entry.latency > 5000) recommendation = 'slow';
+    return { healthy: entry.healthy, latency: entry.latency, errorRate, recommendation };
+  }
+
+  // ===== Cost Tracking (Smart Routing 反馈：成本追踪闭环) =====
+  /** @type {Array<{ts: number, provider: string, tokensIn: number, tokensOut: number, cost: number, taskType: string}>} */
+  _costLog = [];
+  _costWindowSize = 100;
+
+  /**
+   * 记录单次 LLM 调用成本
+   * @param {object} metrics - { provider, tokensIn, tokensOut, cost, taskType }
+   */
+  recordCost(metrics = {}) {
+    const entry = {
+      ts: Date.now(),
+      provider: metrics.provider || 'unknown',
+      tokensIn: Number(metrics.tokensIn || 0),
+      tokensOut: Number(metrics.tokensOut || 0),
+      cost: Number(metrics.cost || 0),
+      taskType: metrics.taskType || 'unknown',
+    };
+    this._costLog.push(entry);
+    if (this._costLog.length > this._costWindowSize) {
+      this._costLog = this._costLog.slice(-this._costWindowSize);
+    }
+  }
+
+  /**
+   * 获取成本统计
+   * @param {string} window - 'hour' | 'day' | 'all'
+   * @returns {object} { totalCost, totalTokens, callCount, avgCostPerCall, byProvider }
+   */
+  getCostStats(window = 'all') {
+    const now = Date.now();
+    const windowMs = window === 'hour' ? 3600000 : window === 'day' ? 86400000 : 0;
+    const entries = windowMs > 0
+      ? this._costLog.filter(e => now - e.ts < windowMs)
+      : this._costLog;
+
+    const stats = {
+      totalCost: 0, totalTokens: 0, callCount: entries.length,
+      avgCostPerCall: 0, byProvider: {}
+    };
+    for (const e of entries) {
+      stats.totalCost += e.cost;
+      stats.totalTokens += e.tokensIn + e.tokensOut;
+      const p = stats.byProvider[e.provider] || { calls: 0, cost: 0, tokens: 0 };
+      p.calls += 1; p.cost += e.cost; p.tokens += e.tokensIn + e.tokensOut;
+      stats.byProvider[e.provider] = p;
+    }
+    stats.avgCostPerCall = stats.callCount > 0 ? stats.totalCost / stats.callCount : 0;
+    return stats;
+  }
+
+
   /**
    * 分类故障严重性
    * @param {Error|string|Object} errorLike

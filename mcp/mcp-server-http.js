@@ -159,6 +159,38 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: { context: { type: 'string', description: '当前上下文或失败场景描述' } }, required: ['context'] }
   },
   {
+    name: 'heartflow_provider_health',
+    description: 'Provider 健康检查：记录/查询 LLM provider 调用健康状态（延迟、错误率、建议）。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        provider: { type: 'string', description: 'Provider 名称（默认 default）' },
+        action: { type: 'string', enum: ['get', 'record'], description: 'get=查询健康状态, record=记录一次调用结果' },
+        success: { type: 'boolean', description: 'record 时必填：调用是否成功' },
+        latency: { type: 'number', description: 'record 时可选：延迟(ms)' },
+        error: { type: 'string', description: 'record 时可选：错误信息' }
+      },
+      required: ['action']
+    }
+  },
+  {
+    name: 'heartflow_cost_tracking',
+    description: '成本追踪：记录/查询 LLM 调用成本统计（token 消耗、费用、按 provider 分布）。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['record', 'stats'], description: 'record=记录一次成本, stats=查询统计' },
+        provider: { type: 'string', description: 'Provider 名称' },
+        tokensIn: { type: 'number', description: '输入 token 数' },
+        tokensOut: { type: 'number', description: '输出 token 数' },
+        cost: { type: 'number', description: '本次调用费用' },
+        taskType: { type: 'string', description: '任务类型（默认 unknown）' },
+        window: { type: 'string', enum: ['hour', 'day', 'all'], description: 'stats 时的时间窗口（默认 all）' }
+      },
+      required: ['action']
+    }
+  },
+  {
     name: 'heartflow_status',
     description: '服务健康检查：返回版本、启动耗时、加载模块数、记忆层状态。',
     inputSchema: { type: 'object', properties: { detail: { type: 'string', enum: ['basic', 'full'], description: '详细程度（默认 basic）' } } }
@@ -453,6 +485,38 @@ function handleSelfHeal(args) {
   };
 }
 
+function handleProviderHealth(args) {
+  const { provider = 'default', action, success, latency, error } = args || {};
+  if (!action) throw new Error('action 是必填参数');
+  const sh = heartflow?.selfHealing;
+  if (!sh) return { error: 'selfHealing 模块不可用', timestamp: Date.now() };
+
+  if (action === 'record') {
+    sh.recordProviderCall(provider, { success: !!success, latency: latency || 0, error: error || null });
+    return { recorded: true, provider, timestamp: Date.now() };
+  }
+
+  // action === 'get'
+  const health = sh.getProviderHealth(provider);
+  return { provider, health, timestamp: Date.now() };
+}
+
+function handleCostTracking(args) {
+  const { action, provider, tokensIn, tokensOut, cost, taskType = 'unknown', window = 'all' } = args || {};
+  if (!action) throw new Error('action 是必填参数');
+  const sh = heartflow?.selfHealing;
+  if (!sh) return { error: 'selfHealing 模块不可用', timestamp: Date.now() };
+
+  if (action === 'record') {
+    sh.recordCost({ provider: provider || 'unknown', tokensIn: tokensIn || 0, tokensOut: tokensOut || 0, cost: cost || 0, taskType });
+    return { recorded: true, timestamp: Date.now() };
+  }
+
+  // action === 'stats'
+  const stats = sh.getCostStats(window);
+  return { window, stats, timestamp: Date.now() };
+}
+
 function handleStatus(args) {
   const { detail = 'basic' } = args || {};
   const startTime = Date.now();
@@ -597,6 +661,8 @@ const HANDLERS = {
   heartflow_memory_search: handleMemorySearch,
   heartflow_emotion: handleEmotion,
   heartflow_self_heal: handleSelfHeal,
+  heartflow_provider_health: handleProviderHealth,
+  heartflow_cost_tracking: handleCostTracking,
   heartflow_status: handleStatus,
   heartflow_agent_psychology: handleAgentPsychology,
   heartflow_engine_pacing: handleEnginePacing,

@@ -1,3 +1,24 @@
+## [v5.4.8] - 2026-06-29
+### Added
+- **Smart Routing 优化** — 吸收 GitHub 社区反馈（DeepSeek-V3 #1446 / #1462）
+  - decision-router.js: 新增 prevent-overthinking 规则（反思链 >5 步且置信度 <0.6 时 HOLD）
+  - self-healing.js: 新增 lightweightPolicyCache（5 分钟 TTL，相似场景直接命中）
+  - identity-engine.js: 新增 computeHarmonyStatus（Position - Coherence + 归一化 + 状态标签）
+  - self-healing.js: 新增 Provider 健康检查（recordProviderCall / getProviderHealth）
+  - self-healing.js: 新增成本追踪（recordCost / getCostStats）
+  - mcp-server-http.js: 新增 heartflow_provider_health + heartflow_cost_tracking 两个 MCP 工具
+### Fixed
+- 版本号对齐：package.json / VERSION / VERSION.txt / README.md / SKILL.md / CHANGELOG 统一到 v5.4.8
+
+## [v5.4.7] - 2026-06-29
+### Added
+- **Smart Routing 优化** — 吸收 GitHub 社区反馈（DeepSeek-V3 #1446 / #1462）
+  - decision-router.js: 新增 prevent-overthinking 规则（反思链 >5 步且置信度 <0.6 时 HOLD）
+  - self-healing.js: 新增 lightweightPolicyCache（5 分钟 TTL，相似场景直接命中）
+  - identity-engine.js: 新增 computeHarmonyStatus（Position - Coherence + 归一化 + 状态标签）
+### Fixed
+- 版本号对齐：package.json / VERSION / VERSION.txt / README.md / SKILL.md / CHANGELOG 统一到 v5.4.7
+
 ## [v5.4.6] - 2026-06-29
 ### Added
 - **Smart Routing 启发升级** — capabilityAbstraction 和 platformAdapter 接入主引擎：
