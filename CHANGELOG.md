@@ -1,3 +1,8 @@
+## [v5.4.3] - 2026-06-29
+### Fixed
+- 版本号对齐：package.json / VERSION / VERSION.txt / README.md / SKILL.md / CHANGELOG 统一到 v5.4.3
+- 升级规则修正：后续所有升级严格 +0.0.1，不跳版本
+
 ## [v5.3.0] - 2026-06-28
 ### Added
 - **BigBench 100%** — 空间排序推理全对：sorted补全逻辑（rightOf链遍历+fixedPositions优先）、leftmost/rightmost推导修复（排除second_from_left）、3物品补全兜底
