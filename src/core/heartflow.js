@@ -161,6 +161,9 @@ class HeartFlow {
     // [v2.0.19 FIX] _initErrors 必须在所有 try/catch 之前初始化
     this._initErrors = [];
 
+    // [v5.4.6] LLM 兜底回调 — 任务分类置信度 < 0.7 时调用
+    this._llmFallback = null;
+
     // Subsystem instances (null until start)
     this.identityCore = null;  // 身份核心 — 每次启动第一优先加载
     this.cognitive = null;     // 认知协议 — 慢下来，先理解再行动
@@ -772,6 +775,11 @@ class HeartFlow {
       this.thoughtChain = new (TCMod.ThoughtChain)(this);
       this.thoughtChain.setDepth(TCMod.REASONING_DEPTH.DEEP);
 
+      // [v5.4.6] 暴露 _classifyTask 供 think() 后处理使用
+      if (this.thoughtChain && typeof this.thoughtChain._classifyTask === 'function') {
+        this._classifyTask = this.thoughtChain._classifyTask.bind(this.thoughtChain);
+      }
+
       this._thoughtChainApi = {
         think: (input) => this.think(input),
         thinkFast: (input) => this.thinkFast(input),
@@ -897,6 +905,14 @@ class HeartFlow {
     }
 
     this.started = true;
+  }
+
+  // ─── [v5.4.6] LLM 兜底配置 ──────────────────────────────────────────────
+  setLLMFallback(fn) {
+    if (typeof fn === 'function') {
+      this._llmFallback = fn;
+    }
+    return this;
   }
 
   /**
@@ -1774,37 +1790,58 @@ class HeartFlow {
           });
         }
 
+
+
+
+    // ─── [v5.4.6] 任务分类器 LLM 兜底后处理 ──────────────────────
+    // 规则分类器（含内部 LLM 兜底）置信度高于 judgmentEngine 时，使用分类器结果
+    let taskType = output?.direction || 'general';
+    let taskConfidence = output?.judgmentConfidence || 0.5;
+    if (this._classifyTask) {
+      try {
+        const cls = await this._classifyTask(input);
+        if (cls.confidence > taskConfidence) {
+          taskType = cls.type;
+          taskConfidence = cls.confidence;
+        }
+      } catch (e) { /* 分类失败，保持原结果 */ }
+    }
+
+
+
+
+
         return {
           // 给用户的结论文本
           output: { 
             conclusion: output?.conclusion || '分析完成', 
             meta: { 
-              taskType: output?.direction || 'general', 
-              confidence: output?.judgmentConfidence || 0.5,
+              taskType: taskType, 
+              confidence: taskConfidence,
               // v5.0.2: 认知摘要暴露给用户
               cognitiveSummary: {
-                type: output?.direction || 'general',
+                type: taskType,
                 emotion: cognitionSnapshot.emotion?.emotionZh || cognitionSnapshot.pain?.hasPain ? 'distress' : 'neutral',
                 decision: cognitionSnapshot.decision?.type || 'analyze',
-                confidence: output?.judgmentConfidence || 0.5,
+                confidence: taskConfidence,
                 modulesRun: stages.length,
                 stages: stages.filter(s => s.success).length,
               },
             } 
           },
-          type: output?.direction || 'general',
-          confidence: output?.judgmentConfidence || 0.5,
+          type: taskType,
+          confidence: taskConfidence,
           // 给 LLM 的结构化推理数据
           cognition: cognitionSnapshot,
           thoughtChain: stages.map(s => ({ stage: s.id, success: s.success, timing: s.timing })),
           decision: {
-            type: output?.direction || 'analyze',
-            confidence: output?.judgmentConfidence || 0.5,
+            type: taskType,
+            confidence: taskConfidence,
             rationale: `管道引擎完成: ${stages.length}阶段/${stages.filter(s => s.success).length}成功`,
-            ruleId: `pipeline-${output?.direction || 'analyze'}`,
+            ruleId: `pipeline-${taskType}`,
           },
           meta: {
-            routeHint: { type: output?.direction || 'general', confidence: output?.judgmentConfidence || 0.5 },
+            routeHint: { type: taskType, confidence: taskConfidence },
             pipeline: {
               stages: stages.length,
               success: stages.filter(s => s.success).length,
@@ -1814,9 +1851,9 @@ class HeartFlow {
             disclaimer: 'pipeline_output',
           },
           analysis: {
-            perceivedType: output?.direction || 'general',
+            perceivedType: taskType,
             modulesRun: stages.length,
-            confidence: output?.judgmentConfidence || 0.5,
+            confidence: taskConfidence,
           },
         };
       } catch (e) {
@@ -1839,14 +1876,30 @@ class HeartFlow {
     const taskType = chainResult.output?.meta?.taskType || 'general';
     const finalConfidence = chainResult.output?.meta?.confidence || 0.5;
 
+    // ─── [v5.4.6] 任务分类器 LLM 兜底后处理（ThoughtChain 路径） ──────
+    let tcTaskType = taskType;
+    let tcConfidence = finalConfidence;
+    if (this._llmFallback && this._classifyTask) {
+      try {
+        const cls = await this._classifyTask(input);
+        if (cls.confidence < 0.7) {
+          const llmResult = await this._llmFallback(input, cls.matchedPatterns);
+          if (llmResult?.type) {
+            tcTaskType = llmResult.type;
+            tcConfidence = llmResult.confidence || 0.7;
+          }
+        }
+      } catch (e) { /* 分类或 LLM 失败，保持原结果 */ }
+    }
+
     return {
       output: chainResult.output,
-      type: taskType,
-      confidence: finalConfidence,
+      type: tcTaskType,
+      confidence: tcConfidence,
       thoughtChain: chainResult.chain || [],
       decision: chainResult.decision || null,
-      meta: { routeHint: { type: taskType, confidence: finalConfidence }, disclaimer: 'thoughtchain_fallback' },
-      analysis: { perceivedType: taskType, modulesRun: 0, confidence: finalConfidence },
+      meta: { routeHint: { type: tcTaskType, confidence: tcConfidence }, disclaimer: 'thoughtchain_fallback' },
+      analysis: { perceivedType: tcTaskType, modulesRun: 0, confidence: tcConfidence },
     };
   }
 

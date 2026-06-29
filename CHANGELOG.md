@@ -1,4 +1,4 @@
-## [v5.4.5] - 2026-06-29
+## [v5.4.6] - 2026-06-29
 ### Added
 - **Smart Routing 启发升级** — capabilityAbstraction 和 platformAdapter 接入主引擎：
   - heartflow.js: 新增 _lazy require + 构造函数初始化 + start() 实例化 + _registerModules 注册
@@ -6,7 +6,7 @@
   - platformAdapter 现在可通过 hf.platformAdapter 直接访问
   - loadCapabilitiesFromConfig() 已可用，支持外部 JSON 配置热加载能力定义
 ### Fixed
-- 版本号对齐：package.json / VERSION / VERSION.txt / README.md / SKILL.md / CHANGELOG 统一到 v5.4.5
+- 版本号对齐：package.json / VERSION / VERSION.txt / README.md / SKILL.md / CHANGELOG 统一到 v5.4.6
 
 ## [v5.4.4] - 2026-06-29
 ### Added
