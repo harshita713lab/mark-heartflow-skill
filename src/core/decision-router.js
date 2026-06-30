@@ -25,7 +25,7 @@
  *   → 匹配决策规则 → 生成决策指令 → 返回 { result, decision }
  */
 
-const VERSION = '3.8.1';
+const VERSION = '3.8.3';
 
 // ─── U/D/A/H 场域追踪参数（基于 luoxuejian000 论文） ──────────────────────
 // H = λU·U + λD·D - λA·A
@@ -279,6 +279,18 @@ class DecisionRouter {
         rationale: (r) => `收到质疑/纠错信号，暂停解释路径，进入自我审查状态`,
         fallback: DECISION.HOLD,
       },
+      // ── 成本敏感类（Smart Routing 启发）──
+      {
+        id: 'cost-aware',
+        match: (r) => r.estimatedCost !== undefined || r.cost !== undefined,
+        decision: DECISION.HOLD,
+        confidence: (r) => {
+          const cost = r.estimatedCost || r.cost || 0;
+          return cost > 0.05 ? 0.7 : 0;
+        },
+        rationale: (r) => `高成本任务(${((r.estimatedCost || r.cost || 0)).toFixed(4)})，建议降级或精简`,
+        fallback: DECISION.REST,
+      },
       // ── 价值/伦理类 ──
       {
         id: 'value-resonance',
@@ -459,7 +471,33 @@ class DecisionRouter {
         rationale: (r) => `谐振态退出: A超阈值(${(r._fieldA || 0).toFixed(3)}), 需转向避免场域失谐`,
         fallback: DECISION.PAUSE,
       },
+      // ── Smart Routing 优化（qingkong66 #1446 反馈：Self-Reflection → Overthinking）──
+      {
+        id: 'prevent-overthinking',
+        match: (r) => {
+          const chain = r.thoughtChain || r.chain || [];
+          const confidence = r.confidence || 0;
+          return chain.length > 5 && confidence < 0.6;
+        },
+        decision: DECISION.HOLD,
+        confidence: (r) => 0.7,
+        rationale: (r) => `反思链过长(${(r.thoughtChain || r.chain || []).length}步)且置信度下降(${(r.confidence || 0).toFixed(2)})，防止过度思考`,
+        fallback: DECISION.REST,
+      },
     ];
+
+    // 决策反馈循环（2026-06-28 基于 DeepSeek #1424 讨论）
+    this._ruleStats = {};
+    for (const rule of this._rules) {
+      if (!rule.hasOwnProperty('weight')) rule.weight = 1.0;
+      this._ruleStats[rule.id] = {
+        hits: 0,
+        correct: 0,
+        wrong: 0,
+        accuracy: 1.0,
+        lastAdjustment: 0,
+      };
+    }
 
     // 决策历史
     this._history = [];
@@ -955,8 +993,9 @@ class DecisionRouter {
       try {
         if (!rule.match(result)) continue;
 
-        const confidence = rule.confidence(result);
-        if (confidence <= 0) continue;
+        const baseConfidence = rule.confidence(result);
+        if (baseConfidence <= 0) continue;
+        const ruleWeight = rule.weight !== undefined ? rule.weight : 1.0;
 
         const lastTrigger = this._suppression.get(rule.id);
         if (lastTrigger && (now - lastTrigger) < this._suppressionWindow) {
@@ -967,20 +1006,38 @@ class DecisionRouter {
         matches.push({
           ruleId: rule.id,
           type: rule.decision,
-          confidence: Math.min(1, Math.max(0, confidence)),
+          confidence: Math.min(1, Math.max(0, baseConfidence * ruleWeight)),
           priority: DECISION_PRIORITY[rule.decision] || 0,
           rationale: rule.rationale(result),
           fallback: rule.fallback,
           timestamp: now,
+          ruleWeight,
         });
+
+        // 记录规则命中
+        const stats = this._ruleStats[rule.id];
+        if (stats) stats.hits++;
       } catch (e) {
         // 规则执行失败，跳过
       }
     }
 
     if (matches.length === 0) {
+      // v5.4.1: 兜底规则 — 没有规则匹配时输出 hold（等待更多数据）
+      // 不输出 null，确保上层始终收到一个可用的决策
+      this._stats.totalDecisions++;
+      this._stats.byDecision[DECISION.HOLD] = (this._stats.byDecision[DECISION.HOLD] || 0) + 1;
       return {
-        decision: null,
+        decision: {
+          type: DECISION.HOLD,
+          confidence: 0.3,
+          priority: DECISION_PRIORITY[DECISION.HOLD],
+          rationale: '无匹配规则，等待更多数据',
+          ruleId: 'default-hold',
+          timestamp: Date.now(),
+          source,
+          fallback: null,
+        },
         matched: false,
         rules: [],
         field: fieldData,
@@ -1072,6 +1129,7 @@ class DecisionRouter {
         priority: best.priority,
         rationale: best.rationale,
         ruleId: best.ruleId,
+        ruleWeight: best.ruleWeight,
         timestamp: best.timestamp,
         source,
         fallback: best.fallback,
@@ -1353,6 +1411,110 @@ class DecisionRouter {
     }
 
     return { passed, baseline, current, deviation, details };
+  }
+
+  /**
+   * 决策反馈循环（2026-06-28 基于 DeepSeek #1424 讨论）
+   *
+   * @param {string} ruleId - 规则 ID
+   * @param {'correct'|'wrong'} outcome - 执行结果
+   */
+  feedback(ruleId, outcome) {
+    const stats = this._ruleStats[ruleId];
+    if (!stats) return;
+
+    if (outcome === 'correct') {
+      stats.correct++;
+    } else if (outcome === 'wrong') {
+      stats.wrong++;
+    }
+
+    const total = stats.correct + stats.wrong;
+    stats.accuracy = total > 0 ? stats.correct / total : 1.0;
+
+    const rule = this._rules.find(r => r.id === ruleId);
+    if (!rule) return;
+
+    const delta = outcome === 'correct' ? 0.05 : -0.10;
+    rule.weight = Math.max(0.1, Math.min(2.0, (rule.weight || 1.0) + delta));
+    stats.lastAdjustment = delta;
+
+    if (stats.accuracy < 0.4 && rule.weight <= 0.3) {
+      rule._downgraded = true;
+      rule.priority = (rule.priority || 50) * 0.5;
+    }
+
+    this._stats.ruleFeedbackCount = (this._stats.ruleFeedbackCount || 0) + 1;
+  }
+
+  /**
+   * 获取规则统计信息
+   */
+  getRuleStats() {
+    return Object.entries(this._ruleStats).map(([ruleId, s]) => ({
+      ruleId,
+      ...s,
+    }));
+  }
+
+  /**
+   * 导出决策历史为 CSV 字符串（对齐 TAT CSV traces 格式）
+   * 
+   * 字段：timestamp, type, confidence, ruleId, source, field_step, field_U, field_D, field_A, field_H, field_driver, field_flipAlert
+   * 
+   * 用途：跨框架对比、benchmark 记录、人工审查
+   */
+  exportCSV(limit) {
+    const rows = this._history.slice(-limit);
+    if (rows.length === 0) return 'timestamp,type,confidence,ruleId,source,field_step,field_U,field_D,field_A,field_H,field_driver,field_flipAlert\n';
+    const header = 'timestamp,type,confidence,ruleId,source,field_step,field_U,field_D,field_A,field_H,field_driver,field_flipAlert\n';
+    const body = rows.map(r => {
+      const f = r.field || {};
+      const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      return [
+        esc(r.timestamp),
+        esc(r.type),
+        esc(r.confidence),
+        esc(r.ruleId),
+        esc(r.source),
+        esc(f.step),
+        esc(f.U),
+        esc(f.D),
+        esc(f.A),
+        esc(f.H),
+        esc(f.driver),
+        esc(f.flipAlert),
+      ].join(',');
+    }).join('\n');
+    return header + body + '\n';
+  }
+
+  /**
+   * 导出规则反馈统计为 CSV
+   * 
+   * 字段：ruleId, hits, correct, wrong, accuracy, weight, downgraded
+   */
+  exportRuleStatsCSV() {
+    const stats = this.getRuleStats();
+    if (stats.length === 0) return 'ruleId,hits,correct,wrong,accuracy,weight,downgraded\n';
+    const header = 'ruleId,hits,correct,wrong,accuracy,weight,downgraded\n';
+    const rules = this._rules;
+    const body = stats.map(s => {
+      const rule = rules.find(r => r.id === s.ruleId);
+      const weight = rule ? rule.weight : 1.0;
+      const downgraded = rule ? !!rule._downgraded : false;
+      const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      return [
+        esc(s.ruleId),
+        esc(s.hits),
+        esc(s.correct),
+        esc(s.wrong),
+        esc(s.accuracy?.toFixed(4)),
+        esc(weight.toFixed(4)),
+        esc(downgraded),
+      ].join(',');
+    }).join('\n');
+    return header + body + '\n';
   }
 }
 

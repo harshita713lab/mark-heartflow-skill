@@ -24,14 +24,14 @@ function _lazy(key, loader) {
 }
 
 // Search modules
-const _BM25Engine = _lazy('bm25', () => require('../search/search/bm25.js'));
-const _HybridSearchEngine = _lazy('hybridSearch', () => require('../search/search/hybrid-search.js'));
+const _BM25Engine = _lazy('bm25', () => require('../search/bm25.js'));
+const _HybridSearchEngine = _lazy('hybridSearch', () => require('../search/hybrid-search.js'));
 const _Budget = _lazy('budget', () => require('./budget.js'));
-const _Graph = _lazy('graph', () => require('../memory/memory/graph.js'));
+const _Graph = _lazy('graph', () => require('../memory/graph.js'));
 const _CoreUtils = _lazy('utils', () => require('./utils.js'));
-const _SearchTrace = _lazy('searchTrace', () => require('../search/search/search-trace.js'));
-const _Slots = _lazy('slots', () => require('../memory/memory/slots.js'));
-const _Observe = _lazy('observe', () => require('../memory/memory/observe.js'));
+const _SearchTrace = _lazy('searchTrace', () => require('../search/search-trace.js'));
+const _Slots = _lazy('slots', () => require('../memory/slots.js'));
+const _Observe = _lazy('observe', () => require('../memory/observe.js'));
 const _MeaningfulMemory = _lazy('meaningfulMemory', () => require('../memory/memory-adapter.js'));
 const _KnowledgeGraph = _lazy('knowledgeGraph', () => require('../memory/knowledge-graph.js'));
 const _RetrievalAnchor = _lazy('retrievalAnchor', () => require('../memory/retrieval-anchor.js'));
@@ -45,7 +45,7 @@ const _ConstitutionalEngine = _lazy('constitutionalEngine', () => require('../sh
 const _IdentityCore = _lazy('identityCore', () => require('../identity/identity-core.js'));
 const _SelfModel = _lazy('selfModel', () => require('../identity/self-model.js'));
 const _SelfVerifier = _lazy('selfVerifier', () => require('../identity/self-verifier.js'));
-const _LessonBank = _lazy('lessonBank', () => require('../identity/lesson-bank.js'));
+const _LessonBank = _lazy('lessonBank', () => require('../cortex/lesson-bank.js'));
 const _TopicScope = _lazy('topicScope', () => require('../memory/topic-scope.js'));
 const _LessonStorage = _lazy('lessonStorage', () => require('../cortex/lessons/lesson-storage.js'));
 const _PsychologyEngine = _lazy('psychologyEngine', () => require('../emotion/engine.js'));
@@ -71,10 +71,10 @@ const _StateSnapshot = _lazy('stateSnapshot', () => require('./state-snapshot.js
 const _ErrorHandler = _lazy('errorHandler', () => require('./error-handler.js'));
 const _ThoughtChain = _lazy('thoughtChain', () => require('../workflow/thought-chain.js'));
 const _CognitiveProtocol = _lazy('cognitiveProtocol', () => require('./cognitive-protocol.js'));
-const _GlobalWorkspace = _lazy('globalWorkspace', () => require('../consciousness/consciousness/global-workspace.js'));
-const _MindWanderer = _lazy('mindWanderer', () => require('../consciousness/consciousness/mind-wanderer.js'));
-const _PhenomenologyEngine = _lazy('phenomenologyEngine', () => require('../consciousness/consciousness/phenomenology-engine.js'));
-const _ConsciousnessSelfModel = _lazy('consciousnessSelfModel', () => require('../consciousness/consciousness/self-model.js'));
+const _GlobalWorkspace = _lazy('globalWorkspace', () => require('../consciousness/global-workspace.js'));
+const _MindWanderer = _lazy('mindWanderer', () => require('../consciousness/mind-wanderer.js'));
+const _PhenomenologyEngine = _lazy('phenomenologyEngine', () => require('../consciousness/phenomenology-engine.js'));
+const _ConsciousnessSelfModel = _lazy('consciousnessSelfModel', () => require('../consciousness/self-model.js'));
 const _SAGEGuardian = _lazy('sageGuardian', () => require('../shield/ethics/sage-guardian.js'));
 const _BoundaryNegotiation = _lazy('boundaryNegotiation', () => require('../shield/ethics/boundary-negotiation.js'));
 const _ValueInternalizer = _lazy('valueInternalizer', () => require('../shield/ethics/value-internalizer.js'));
@@ -82,6 +82,7 @@ const _ValueInternalizer = _lazy('valueInternalizer', () => require('../shield/e
 const _TimeExtension = _lazy('timeExtension', () => require('../workflow/time-extension.js'));
 const _MindSpaceGuardian = _lazy('mindSpaceGuardian', () => require('../shield/mindspace/mind-space-guardian.js'));
 const _TransmissionEngine = _lazy('transmissionEngine', () => require('../workflow/transmission/transmission-engine.js'));
+const _VerifierGrant = _lazy('verifierGrant', () => require('./verifier-grant.js'));
 const _AdaptivePlanner = _lazy('adaptivePlanner', () => { try { return require('../planner/adaptive-planner.js'); } catch(e) { return { AdaptivePlanner: class { constructor() {} } }; } });
 const _StrategySelector = _lazy('strategySelector', () => { try { return require('../planner/strategy-selector.js'); } catch(e) { return { StrategySelector: class { constructor() {} } }; } });
 const _ReplanTrigger = _lazy('replanTrigger', () => { try { return require('../planner/replan-trigger.js'); } catch(e) { return { ReplanTrigger: class { constructor() {} } }; } });
@@ -103,16 +104,21 @@ const _KnowledgeBase = _lazy('knowledgeBase', () => { try { return require('../r
 const _CommonsenseEngine = _lazy('commonsenseEngine', () => { try { return require('../reasoning/commonsense-engine.js'); } catch(e) { return { CommonsenseEngine: class { constructor() {} } }; } });
 const _CausalInference = _lazy('causalInference', () => { try { return require('../reasoning/causal-inference.js'); } catch(e) { return { CausalInference: class { constructor() {} } }; } });
 const _InferenceChain = _lazy('inferenceChain', () => { try { return require('../reasoning/inference-chain.js'); } catch(e) { return { InferenceChain: class { constructor() {} } }; } });
+const _LogicReasoning = _lazy('logicReasoning', () => require('../reasoning/logic-reasoning.js'));
 const _AutonomousEmotion = _lazy('autonomousEmotion', () => { try { return require('../emotion/autonomous-emotion.js'); } catch(e) { return { AutonomousEmotion: class { constructor() {} } }; } });
 const _DesireSystem = _lazy('desireSystem', () => { try { return require('../emotion/desire-system.js'); } catch(e) { return { DesireSystem: class { constructor() {} } }; } });
 const _EmotionalGrowth = _lazy('emotionalGrowth', () => { try { return require('../emotion/emotional-growth.js'); } catch(e) { return { EmotionalGrowth: class { constructor() {} } }; } });
 const _MoodEvolution = _lazy('moodEvolution', () => { try { return require('../emotion/mood-evolution.js'); } catch(e) { return { MoodEvolution: class { constructor() {} } }; } });
 const _VERSION = _lazy('version', () => require('./version.js'));
 
-// ★ 代码引擎 — 惰性加载
-const _CodeExecutor = _lazy('codeExecutor', () => require('../../code/code/code-executor.js'));
-const _CodePlanner = _lazy('codePlanner', () => require('../../code/code/code-planner.js'));
-const _CodeWriter = _lazy('codeWriter', () => require('../../code/code/code-writer.js'));
+// ★ 能力抽象层 + 平台适配器（Smart Routing 启发：模型能力清单外置 + 径窗网络）
+const _CapabilityAbstraction = _lazy('capabilityAbstraction', () => require('./capability-abstraction.js'));
+const _PlatformAdapter = _lazy('platformAdapter', () => require('./platform-adapter.js'));
+
+// ★ 代码引擎 — 惰性加载（拉平目录后路径）
+const _CodeExecutor = _lazy('codeExecutor', () => require('../code/code-executor.js'));
+const _CodePlanner = _lazy('codePlanner', () => require('../code/code-planner.js'));
+const _CodeWriter = _lazy('codeWriter', () => require('../code/code-writer.js'));
 
 // v3.0 — 交流层模块
 const _UserToLLM = _lazy('userToLLM', () => require('../bridge/user-to-llm.js'));
@@ -122,7 +128,7 @@ const _ToneAnalyzer = _lazy('toneAnalyzer', () => require('../bridge/tone-analyz
 const _EntityExtractor = _lazy('entityExtractor', () => require('../bridge/entity-extractor.js'));
 const _ImplicitNeedDetector = _lazy('implicitNeedDetector', () => require('../bridge/implicit-need-detector.js'));
 const _ResponseCompressor = _lazy('responseCompressor', () => require('../bridge/response-compressor.js'));
-const _ConfidenceAnnotator = _lazy('confidenceAnnotator', () => require('../bridge/confidence-annotator.js'));
+const _ConfidenceAnnotator = _lazy('confidenceAnnotator', () => require('./confidence-annotator.js'));
 const _AgentBridge = _lazy('agentBridge', () => require('../bridge/agent-bridge.js'));
 const _ContextBuilder = _lazy('contextBuilder', () => require('../bridge/context-builder.js'));
 const _ResponseInterceptor = _lazy('responseInterceptor', () => require('../bridge/response-interceptor.js'));
@@ -154,6 +160,9 @@ class HeartFlow {
 
     // [v2.0.19 FIX] _initErrors 必须在所有 try/catch 之前初始化
     this._initErrors = [];
+
+    // [v5.4.6] LLM 兜底回调 — 任务分类置信度 < 0.7 时调用
+    this._llmFallback = null;
 
     // Subsystem instances (null until start)
     this.identityCore = null;  // 身份核心 — 每次启动第一优先加载
@@ -194,6 +203,8 @@ class HeartFlow {
     this.behavior = null;  // v2.0.19 行为模式系统
     this.persistence = null;  // v2.0.19 持久化层
     this.judgmentEngine = null;  // v5.0.0 判断引擎
+    this.capabilityAbstraction = null;  // v5.4.5 能力抽象层（Smart Routing 启发）
+    this.platformAdapter = null;        // v5.4.5 平台适配器（径窗网络）
 
     // New modules
     this.bm25 = null;
@@ -372,7 +383,7 @@ class HeartFlow {
     this.evolution = new (_EvolutionLoop().EvolutionLoop)({ rootPath: this.rootPath, memory: this.memory }).boot();
     this.dream = new (_DreamEngine().DreamV11)({});
     this.dreamConsolidation = new (_DreamConsolidation().DreamConsolidation)(this.memory);
-    this.lesson = new (_LessonBank().LessonBank)(this.rootPath);
+    this.lesson = _LessonBank().lessonBank || _LessonBank();
     this.metaJudgment = new (_MetaJudgment().MetaJudgment)(this.rootPath);
     this.metaMemory = new (_MetaMemory().MetaMemory)(this.rootPath);
     this.skillGenerator = new (_SkillGenerator().SkillGenerator)(this.rootPath);
@@ -491,8 +502,22 @@ class HeartFlow {
     try { this.confidence = new (_ConfidenceCalibrator().ConfidenceCalibrator)(); } catch (e) { this._initErrors.push({module: 'confidence', error: e.message}); }
     try { this.restraint = new (_SpontaneousRestraint().SpontaneousRestraint)(); } catch (e) { this._initErrors.push({module: 'restraint', error: e.message}); }
     try { this.workflow = new (_WorkflowSwitch())(); } catch (e) { this._initErrors.push({module: 'workflow', error: e.message}); }
+    try { this.verifierGrant = new (_VerifierGrant().VerifierGrant)(); } catch (e) { this._initErrors.push({module: 'verifierGrant', error: e.message}); }
+    if (this.verifierGrant) this._modules['verifierGrant'] = this.verifierGrant;
     this.snapshot = _StateSnapshot();
     this.error = _ErrorHandler();
+
+    // ★ Smart Routing 启发：平台适配器 + 能力抽象层
+    try {
+      this.platformAdapter = _PlatformAdapter().createAdapter('hermes');
+    } catch (e) {
+      this._initErrors.push({ module: 'platformAdapter', error: e.message });
+    }
+    try {
+      this.capabilityAbstraction = new (_CapabilityAbstraction().CapabilityAbstraction)(this.platformAdapter);
+    } catch (e) {
+      this._initErrors.push({ module: 'capabilityAbstraction', error: e.message });
+    }
 
     // ─── Tier 2 延迟加载注册表 ──────────────────────────────────────────
     // Tier 2 模块在首次 dispatch 时才加载并实例化。
@@ -524,13 +549,10 @@ class HeartFlow {
       desireSystem: { lazy: true, path: '../emotion/desire-system.js', Ctor: 'DesireSystem', args: {} },
       emotionalGrowth: { lazy: true, path: '../emotion/emotional-growth.js', Ctor: 'EmotionalGrowth', args: {} },
       moodEvolution: { lazy: true, path: '../emotion/mood-evolution.js', Ctor: 'MoodEvolution', args: {} },
-      // Code Subsystem — 代码能力（6个 Tier 2 模块）
-      code:            { lazy: true, path: '../code/code/code-generator.js',  Ctor: 'CodeGenerator',  args: { hf: null } },
-      codeExecutor:    { lazy: true, path: '../code/code/code-executor.js',   Ctor: 'CodeExecutor',   args: { hf: null } },
-      codeVerifier:    { lazy: true, path: '../code/code/code-verifier.js',   Ctor: 'CodeVerifier',   args: { hf: null } },
-      codePlanner:     { lazy: true, path: '../code/code/code-planner.js',   Ctor: 'CodePlanner',    args: { hf: null } },
-      codeKnowledge:   { lazy: true, path: '../code/code/code-knowledge.js', Ctor: 'CodeKnowledge',  args: { rootPath: null } },
-      codeWriter:      { lazy: true, path: '../code/code/code-writer.js',   Ctor: 'CodeWriter',     args: {} },
+      // Code Subsystem — 代码能力（3个 Tier 2 模块）
+      codeExecutor:    { lazy: true, path: '../code/code-executor.js',   Ctor: 'CodeExecutor',   args: { hf: null } },
+      codePlanner:     { lazy: true, path: '../code/code-planner.js',   Ctor: 'CodePlanner',    args: { hf: null } },
+      codeWriter:      { lazy: true, path: '../code/code-writer.js',   Ctor: 'CodeWriter',     args: {} },
       // claude-clarity v1.8.2 吸收集成 — 知识图谱/大五人格/共情评估/意图层
       knowledgeGraph:  { lazy: true, path: '../memory/knowledge-graph.js',    Ctor: 'KnowledgeGraph',  args: { dataDir: null } },
       bigFive:         { lazy: true, path: '../identity/BigFivePersonality.js', Ctor: '',                args: {} },
@@ -727,6 +749,12 @@ class HeartFlow {
       this.timeExtension = new TimeExtensionEngine(this);
     } catch (e) { this._initErrors = this._initErrors || []; this._initErrors.push({ module: 'timeExtension', error: e.message }); }
 
+    // ─── 逻辑推理引擎 — LogicReasoning（v1.0.0 新增） ────────────────────────
+    try {
+      const { LogicReasoning } = require('../reasoning/logic-reasoning.js');
+      this.logicReasoning = new LogicReasoning();
+    } catch (e) { this._initErrors = this._initErrors || []; this._initErrors.push({ module: 'logicReasoning', error: e.message }); }
+
     // ─── 辩论分析器 — DebateAnalyzer（v2.10.2 新增） ─────────────────────────
     try {
       const { DebateAnalyzer } = require('../reasoning/debate-analyzer.js');
@@ -783,6 +811,11 @@ class HeartFlow {
       const TCMod = _ThoughtChain();
       this.thoughtChain = new (TCMod.ThoughtChain)(this);
       this.thoughtChain.setDepth(TCMod.REASONING_DEPTH.DEEP);
+
+      // [v5.4.6] 暴露 _classifyTask 供 think() 后处理使用
+      if (this.thoughtChain && typeof this.thoughtChain._classifyTask === 'function') {
+        this._classifyTask = this.thoughtChain._classifyTask.bind(this.thoughtChain);
+      }
 
       this._thoughtChainApi = {
         think: (input) => this.think(input),
@@ -912,6 +945,14 @@ class HeartFlow {
     this.started = true;
   }
 
+  // ─── [v5.4.6] LLM 兜底配置 ──────────────────────────────────────────────
+  setLLMFallback(fn) {
+    if (typeof fn === 'function') {
+      this._llmFallback = fn;
+    }
+    return this;
+  }
+
   /**
    * 干净关闭 — 清理定时器，允许进程退出
    * 主要用于 CLI 验证场景（node -e 后快速退出）
@@ -1010,6 +1051,11 @@ class HeartFlow {
       'cognitionGround',
       // v5.0.0 — 判断引擎
       //'judgmentEngine',
+      'judgmentEngine',
+      // v5.4.5 — 能力抽象层 + 平台适配器（Smart Routing 启发）
+      'capabilityAbstraction', 'platformAdapter',
+      // v1.0.0 — 逻辑推理引擎
+      'logicReasoning',
       // v5.0.0 — 管道引擎
       //'pipeline',
       // v5.1.0 — 自省
@@ -1343,10 +1389,19 @@ class HeartFlow {
     // v5.0.0 — 判断引擎
     'judgmentEngine.judge', 'judgmentEngine.recordOutcome', 'judgmentEngine.selfReview',
     'judgmentEngine.getStats',
+    // v1.0.0 — 逻辑推理引擎
+    'logicReasoning.analyze', 'logicReasoning.detectType', 'logicReasoning.checkPremises',
+    'logicReasoning.findFallacies', 'logicReasoning.recommendFramework',
+    'logicReasoning.getStats', 'logicReasoning.getHistory',
     // v5.0.0 — 管道引擎
     'pipeline.run', 'pipeline.getStats',
     // v5.1.0 — 自省
     'heartflow.introspect', 'heartflow.introspectAndDream',
+    // v1.0.0 — 签名授权验证层
+    'verifierGrant.createSessionKey', 'verifierGrant.createGrant', 'verifierGrant.consumeGrant',
+    'verifierGrant.revokeGrant', 'verifierGrant.computeArgsDigest',
+    'verifierGrant.verifySessionKey', 'verifierGrant.getStats', 'verifierGrant.getAuditLog',
+    'verifierGrant.reset',
   ]);
 
   /**
@@ -1457,6 +1512,10 @@ class HeartFlow {
             if (mod.setHeartFlow) {
               mod.setHeartFlow(this);
             }
+          } else if (subsystem === 'codeExecutor') {
+            mod = new Ctor({ hf: this });
+          } else if (subsystem === 'codePlanner') {
+            mod = new Ctor({ hf: this });
           } else {
             mod = new Ctor(entry.args);
           }
@@ -1790,37 +1849,58 @@ class HeartFlow {
           });
         }
 
+
+
+
+    // ─── [v5.4.6] 任务分类器 LLM 兜底后处理 ──────────────────────
+    // 规则分类器（含内部 LLM 兜底）置信度高于 judgmentEngine 时，使用分类器结果
+    let taskType = output?.direction || 'general';
+    let taskConfidence = output?.judgmentConfidence || 0.5;
+    if (this._classifyTask) {
+      try {
+        const cls = await this._classifyTask(input);
+        if (cls.confidence > taskConfidence) {
+          taskType = cls.type;
+          taskConfidence = cls.confidence;
+        }
+      } catch (e) { /* 分类失败，保持原结果 */ }
+    }
+
+
+
+
+
         return {
           // 给用户的结论文本
           output: { 
             conclusion: output?.conclusion || '分析完成', 
             meta: { 
-              taskType: output?.direction || 'general', 
-              confidence: output?.judgmentConfidence || 0.5,
+              taskType: taskType, 
+              confidence: taskConfidence,
               // v5.0.2: 认知摘要暴露给用户
               cognitiveSummary: {
-                type: output?.direction || 'general',
+                type: taskType,
                 emotion: cognitionSnapshot.emotion?.emotionZh || cognitionSnapshot.pain?.hasPain ? 'distress' : 'neutral',
                 decision: cognitionSnapshot.decision?.type || 'analyze',
-                confidence: output?.judgmentConfidence || 0.5,
+                confidence: taskConfidence,
                 modulesRun: stages.length,
                 stages: stages.filter(s => s.success).length,
               },
             } 
           },
-          type: output?.direction || 'general',
-          confidence: output?.judgmentConfidence || 0.5,
+          type: taskType,
+          confidence: taskConfidence,
           // 给 LLM 的结构化推理数据
           cognition: cognitionSnapshot,
           thoughtChain: stages.map(s => ({ stage: s.id, success: s.success, timing: s.timing })),
           decision: {
-            type: output?.direction || 'analyze',
-            confidence: output?.judgmentConfidence || 0.5,
+            type: taskType,
+            confidence: taskConfidence,
             rationale: `管道引擎完成: ${stages.length}阶段/${stages.filter(s => s.success).length}成功`,
-            ruleId: `pipeline-${output?.direction || 'analyze'}`,
+            ruleId: `pipeline-${taskType}`,
           },
           meta: {
-            routeHint: { type: output?.direction || 'general', confidence: output?.judgmentConfidence || 0.5 },
+            routeHint: { type: taskType, confidence: taskConfidence },
             pipeline: {
               stages: stages.length,
               success: stages.filter(s => s.success).length,
@@ -1830,9 +1910,9 @@ class HeartFlow {
             disclaimer: 'pipeline_output',
           },
           analysis: {
-            perceivedType: output?.direction || 'general',
+            perceivedType: taskType,
             modulesRun: stages.length,
-            confidence: output?.judgmentConfidence || 0.5,
+            confidence: taskConfidence,
           },
         };
       } catch (e) {
@@ -1855,14 +1935,30 @@ class HeartFlow {
     const taskType = chainResult.output?.meta?.taskType || 'general';
     const finalConfidence = chainResult.output?.meta?.confidence || 0.5;
 
+    // ─── [v5.4.6] 任务分类器 LLM 兜底后处理（ThoughtChain 路径） ──────
+    let tcTaskType = taskType;
+    let tcConfidence = finalConfidence;
+    if (this._llmFallback && this._classifyTask) {
+      try {
+        const cls = await this._classifyTask(input);
+        if (cls.confidence < 0.7) {
+          const llmResult = await this._llmFallback(input, cls.matchedPatterns);
+          if (llmResult?.type) {
+            tcTaskType = llmResult.type;
+            tcConfidence = llmResult.confidence || 0.7;
+          }
+        }
+      } catch (e) { /* 分类或 LLM 失败，保持原结果 */ }
+    }
+
     return {
       output: chainResult.output,
-      type: taskType,
-      confidence: finalConfidence,
+      type: tcTaskType,
+      confidence: tcConfidence,
       thoughtChain: chainResult.chain || [],
       decision: chainResult.decision || null,
-      meta: { routeHint: { type: taskType, confidence: finalConfidence }, disclaimer: 'thoughtchain_fallback' },
-      analysis: { perceivedType: taskType, modulesRun: 0, confidence: finalConfidence },
+      meta: { routeHint: { type: tcTaskType, confidence: tcConfidence }, disclaimer: 'thoughtchain_fallback' },
+      analysis: { perceivedType: tcTaskType, modulesRun: 0, confidence: tcConfidence },
     };
   }
 
@@ -3142,11 +3238,11 @@ if (require.main === module) {
     console.error(`  dispatch tests: ${passed} passed, ${failed} failed`);
 
     hf.stop();
-    process.exit(failed > 0 ? 1 : 0);
+    return;
   } catch (e) {
     console.error('Error:', e);
     hf.stop();
-    process.exit(1);
+    return;
   }
 }
 

@@ -1,20 +1,24 @@
 {
   "name": "@yun520-1/heartflow",
-  "version": "5.1.2",
+  "version": "5.4.8",
   "description": "HeartFlow — AI judgment engine with multi-path evaluation, self-correcting RL, 3-layer memory, and U/D/A/H field tracking. Zero external dependencies.",
   "main": "src/core/heartflow.js",
   "bin": {
     "heartflow": "bin/cli.js"
   },
   "scripts": {
-    "start": "node bin/cli.js",
+    "start": "node bin/cli.js chat",
+    "status": "node bin/cli.js status",
     "test": "node tests/integration.test.js",
     "verify": "node bin/verify.js",
-    "check": "find src bin -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n 1 node --check"
+    "check": "node -e \"require('fs').readdirSync('src',{recursive:true}).filter(f=>f.endsWith('.js')).forEach(f=>require('child_process').execSync('node --check '+f,{stdio:'inherit'}))\""
   },
   "files": [
     "SKILL.md",
     "VERSION",
+    "INSTALL.md",
+    "README.md",
+    "LICENSE",
     "bin/",
     "src/core/**/*.js",
     "src/core/**/*.json",
@@ -33,7 +37,10 @@
     "src/consciousness/**/*.js",
     "src/search/**/*.js",
     "src/utils/**/*.js",
-    "references/"
+    "src/behavior-tracker.js",
+    "src/pattern-detector.js",
+    "src/report/**/*.js",
+    "mcp/"
   ],
   "keywords": [
     "cognitive",
@@ -69,8 +76,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
   }
 }
