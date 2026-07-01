@@ -76,7 +76,10 @@ function getVersion() {
 
 // 安全配置
 // 可选认证 — 设置 HEARTFLOW_MCP_TOKEN 环境变量以启用认证
-const AUTH_TOKEN = process.env.HEARTFLOW_MCP_TOKEN || null;
+const AUTH_TOKEN = process.env.HEARTFLOW_MCP_TOKEN;
+if (!AUTH_TOKEN && process.env.NODE_ENV !== 'development') {
+  console.warn('[MCP] HEARTFLOW_MCP_TOKEN not set. Auth disabled in production.');
+}
 if (!AUTH_TOKEN) {
   console.error(`[MCP] HEARTFLOW_MCP_TOKEN not set. Running without authentication (localhost only).`);
 }

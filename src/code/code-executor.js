@@ -296,7 +296,7 @@ class CodeExecutor {
       python:     this._checkPythonAvailable()
     };
 
-    console.error(`[CodeExecutor] 初始化完成. 可用执行器: ${JSON.stringify(this._availableExecutors)}`);
+    // [PROD] 生产环境移除 console.error: console.error(`[CodeExecutor] 初始化完成. 可用执行器: ${JSON.stringify(this._availableExecutors)}`);
   }
 
   /**
@@ -840,7 +840,7 @@ class CodeExecutor {
   sandbox(code, options = {}) {
     validateArg(code, 'code', 'string');
 
-    console.warn('⚠️ 沙箱安全警告: 此执行器仅做路径限制，不做系统级沙箱隔离');
+    // [PROD] 生产环境移除 console.warn: console.warn('⚠️ 沙箱安全警告: 此执行器仅做路径限制，不做系统级沙箱隔离');
 
     const opts = { ...DEFAULTS, ...options };
     const timeout = opts.timeout || 30000;
@@ -1064,12 +1064,12 @@ ${code}
     // 2. JavaScript 沙箱自检
     let sandboxOk = false;
     try {
-      const sbResult = this.sandbox('console.log("sandbox_ok");', { timeout: 5000, maxOutput: 1024 });
+      // [PROD] 生产环境移除 console.log: const sbResult = this.sandbox('console.log("sandbox_ok");', { timeout: 5000, maxOutput: 1024 });
       sandboxOk = sbResult.status === ExecStatus.SUCCESS;
       diagnostics.push({
         executor: 'sandbox',
         available: sandboxOk,
-        test: 'console.log("sandbox_ok")',
+        // [PROD] 生产环境移除 console.log: test: 'console.log("sandbox_ok")',
         result: sandboxOk ? 'sandbox_ok' : sbResult.error,
         duration: sbResult.duration
       });
@@ -1077,7 +1077,7 @@ ${code}
       diagnostics.push({
         executor: 'sandbox',
         available: false,
-        test: 'console.log("sandbox_ok")',
+        // [PROD] 生产环境移除 console.log: test: 'console.log("sandbox_ok")',
         result: err.message,
         duration: 0
       });

@@ -1,5 +1,5 @@
 /**
- * decision-router.js — 通用分析→决策路由引擎 v3.0.0
+ * decision-router.js — 通用分析→决策路由引擎 v5.5.0
  *
  * v3.0.0 升级（2026-06-23）：
  *   - 新增 U/D/A/H 四维场域追踪（基于 luoxuejian000 论文框架）
