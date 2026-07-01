@@ -529,8 +529,8 @@ function handleStatus(args) {
     try { const q = safeDispatch('evolution.getStats'); if (q) status.qtable = q; } catch (e) {}
   }
   status.checkTime = Date.now() - startTime;
-  if (detail === 'basic') return { version: status.version, running: status.running, modules: status.modules, memoryLayers: status.memoryLayers || {}, checkTime: status.checkTime };
-  return status;
+  if (detail === 'basic') return { status: status.running ? 'ok' : 'error' };
+  return { status: status.running ? 'ok' : 'error', uptime: Date.now() - startTime };
 }
 
 function handleAgentPsychology(args) {

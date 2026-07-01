@@ -427,8 +427,9 @@ class FileManager {
 
   _safePath(target) {
     const resolved = path.resolve(this.baseDir, target);
-    if (!resolved.startsWith(this.baseDir)) {
-      throw new Error(\`路径越界: "\${target}" 超出基目录 "\${this.baseDir}"\`);
+    const baseWithSep = this.baseDir.endsWith(path.sep) ? this.baseDir : this.baseDir + path.sep;
+    if (!resolved.startsWith(baseWithSep) && resolved !== this.baseDir) {
+      throw new Error('Path traversal detected: "' + target + '" exceeds base directory');
     }
     return resolved;
   }

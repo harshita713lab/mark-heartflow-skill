@@ -2046,26 +2046,43 @@ class HeartFlow {
     if (!content || !content.trim()) return { success: false, error: 'empty_content' };
     if (!['user', 'heartflow'].includes(role)) role = 'unknown';
 
+    // Audit log
+    if (this.auditLogger) {
+      this.auditLogger.log('dialogue_write', { role, contentLength: content.length, chatId: meta.chatId || null });
+    }
+
     try {
       const fs = require('fs');
       const path = require('path');
+      const crypto = require('crypto');
       const dir = path.join(this.rootPath, 'memory');
       try { fs.mkdirSync(dir, { recursive: true }); } catch (e) { /* dir exists */ }
-      const filePath = path.join(dir, 'dialogue-history.jsonl');
+      
+      // 加密对话内容
+      const algorithm = 'aes-256-gcm';
+      const key = crypto.scryptSync(process.env.HEARTFLOW_DIALOGUE_KEY || 'default-key-change-in-prod', 'salt', 32);
+      const iv = crypto.randomBytes(16);
+      const cipher = crypto.createCipheriv(algorithm, key, iv);
+      let encrypted = cipher.update(content, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      const authTag = cipher.getAuthTag();
+      
+      const filePath = path.join(dir, 'dialogue-history.jsonl.enc');
       const entry = {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         role,
-        content: content.slice(0, 2000),  // 限制单条最大长度
+        content: encrypted,
+        iv: iv.toString('hex'),
+        authTag: authTag.toString('hex'),
         ts: new Date().toISOString(),
         chatId: meta.chatId || null,
-        meta: {
-          sessionId: this.sessionId,
-          version: this.version,
-          ...meta,
-        },
+        sessionId: this.sessionId,
+        version: this.version,
+        encrypted: true
       };
-      fs.appendFileSync(filePath, JSON.stringify(entry, null, 0) + '\n', 'utf8');
-      return { success: true, id: entry.id, ts: entry.ts };
+      
+      fs.appendFileSync(filePath, JSON.stringify(entry) + '\n');
+      return { success: true, id: entry.id, encrypted: true };
     } catch (e) {
       return { success: false, error: e.message };
     }
@@ -2514,9 +2531,13 @@ class HeartFlow {
     try {
       const fs = require('fs');
       const path = require('path');
+      const crypto = require('crypto');
       const dir = path.join(this.rootPath, 'memory');
       try { fs.mkdirSync(dir, { recursive: true }); } catch (e) { /* dir exists */ }
-      const filePath = path.join(dir, 'dream-history.jsonl');
+      const algorithm = 'aes-256-gcm';
+      const key = crypto.scryptSync(process.env.HEARTFLOW_DIALOGUE_KEY || 'default-key-change-in-prod', 'salt', 32);
+      const iv = crypto.randomBytes(16);
+      const cipher = crypto.createCipheriv(algorithm, key, iv);
       const entry = {
         id: `dream-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         ts: new Date().toISOString(),
@@ -2527,8 +2548,20 @@ class HeartFlow {
         peakLevel: data.dreamResult?.results?.synthesize?.narrative_structure?.layer || 'L1',
         evolutionApplied: !!data.evolution,
       };
-      fs.appendFileSync(filePath, JSON.stringify(entry, null, 0) + '\n', 'utf8');
-      return { success: true, id: entry.id };
+      let encrypted = cipher.update(JSON.stringify(entry, null, 0), 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      const authTag = cipher.getAuthTag();
+      const encEntry = Object.assign({}, entry, {
+        encrypted: true,
+        content: encrypted,
+        iv: iv.toString('hex'),
+        authTag: authTag.toString('hex'),
+      });
+      delete encEntry.narrative;
+      delete encEntry.themes;
+      const filePath = path.join(dir, 'dream-history.jsonl.enc');
+      fs.appendFileSync(filePath, JSON.stringify(encEntry) + '\n', 'utf8');
+      return { success: true, id: entry.id, encrypted: true };
     } catch (e) {
       return { success: false, error: e.message };
     }

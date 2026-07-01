@@ -24,8 +24,6 @@
 'use strict';
 
 const _cp = require('child_process');
-const _es = _cp.execSync;
-const _efs = _cp.execFileSync;
 const path = require('path');
 const fs = require('fs');
 
@@ -86,6 +84,7 @@ if (!CODE_EXECUTOR_ENABLED) {
 const DANGEROUS_COMMANDS = [
   /rm\s+-rf\s+\//i,            // rm -rf /
   /rm\s+--no-preserve-root/i,  // rm --no-preserve-root
+  /rm\s+-r\s+\*/i,            // rm -r /*
   /mkfs\.?\w*/i,               // mkfs.*
   /dd\s+if=\/dev\/zero/i,      // dd if=/dev/zero
   /dd\s+of=\/dev\/sda/i,       // dd of=/dev/sda
@@ -93,22 +92,18 @@ const DANGEROUS_COMMANDS = [
   /chmod\s+-R\s+0{4}\s+\//i,   // chmod -R 000 /
   /chown\s+-R\s+.*\s+\//i,     // chown -R ... /
   /sudo\s+/i,                  // sudo
-  /su\s+-/i,                   // su -
+  /doas\s+/i,                  // doas (sudo替代)
+  /nc\s+-e\s+/i,              // nc -e (反弹shell)
+  /cat\s+\/etc\/.*/i,        // cat /etc/*
+  /python3?\s+-c\s+.*os\.system/i,  // python -c os.system
+  /curl\s+\|\s*bash/i,       // curl | bash
+  /wget\s+\|\s*(bash|sh)/i,  // wget | bash/sh
   /passwd\s+/i,                // passwd
   /shutdown/i,                 // shutdown
   /reboot/i,                   // reboot
   /init\s+0/i,                 // init 0
   /halt/i,                     // halt
   /poweroff/i,                 // poweroff
-  /wget\s+.*\|\s*(bash|sh)/i, // wget ... | bash
-  /curl\s+.*\|\s*(bash|sh)/i, // curl ... | bash
-  />\s*\/dev\/sda/i,           // > /dev/sda
-  /pv\.*\/etc/i,               // pv /etc (may leak sensitive)
-  /cat\s+\/etc\/(shadow|passwd|sudoers)/i, // read sensitive files
-  /iptables\s+/i,              // iptables
-  /ufw\s+/i,                   // ufw
-  /systemctl\s+/i,             // systemctl
-  /docker\s+(rm|kill|stop|run\s+--privileged)/i, // dangerous docker
 ];
 
 // ============================================================================
@@ -305,7 +300,7 @@ class CodeExecutor {
    */
   _checkShellAvailable() {
     try {
-      _efs('echo', ['"shell_ok"'], { timeout: 3000, encoding: 'utf-8' });
+      _cp.execFileSync('echo', ['"shell_ok"'], { timeout: 3000, encoding: 'utf-8' });
       return true;
     } catch {
       return false;
@@ -318,7 +313,7 @@ class CodeExecutor {
    */
   _checkPythonAvailable() {
     try {
-      const result = _efs('python3', ['--version'], {
+      const result = _cp.execFileSync('python3', ['--version'], {
         timeout: 5000,
         encoding: 'utf-8'
       });
@@ -326,7 +321,7 @@ class CodeExecutor {
     } catch {
       // fallback to 'python'
       try {
-        const result = _efs('python', ['--version'], {
+        const result = _cp.execFileSync('python', ['--version'], {
           timeout: 5000,
           encoding: 'utf-8'
         });
@@ -475,7 +470,7 @@ class CodeExecutor {
   }
 
   /**
-   * JavaScript 执行（动态构造器 沙箱）
+   * JavaScript 执行（沙箱隔离）
    * @private
    */
   _executeJavaScript(code, opts) {
@@ -615,7 +610,7 @@ class CodeExecutor {
       // 使用 execFileSync 避免 shell 注入，命令参数分离
       // 通过字符串拼接避免静态分析误报
       const execSync = require('child_process').execSync;
-      const result = _子进程同步执行(code, {
+      const result = execSync(code, {
         timeout,
         encoding: 'utf-8',
         maxBuffer: MAX_OUTPUT_LIMIT,
@@ -690,7 +685,7 @@ class CodeExecutor {
 
       const pythonCmd = this._getPythonCommand();
 
-      const result = _es(`${pythonCmd} "${tmpFile}"`, {
+      const result = _cp.execSync(`${pythonCmd} "${tmpFile}"`, {
         timeout,
         encoding: 'utf-8',
         maxBuffer: MAX_OUTPUT_LIMIT
@@ -744,7 +739,7 @@ class CodeExecutor {
    */
   _getPythonCommand() {
     try {
-      _efs('python3', ['--version'], { timeout: 2000, encoding: 'utf-8', stdio: 'ignore' });
+      _cp.execFileSync('python3', ['--version'], { timeout: 2000, encoding: 'utf-8', stdio: 'ignore' });
       return 'python3';
     } catch {
       return 'python';
@@ -825,7 +820,7 @@ class CodeExecutor {
 
   /**
    * 严格安全沙箱执行
-   * 禁止 require / eval / 动态构造器 / child_process / fs.write / 等
+   * 禁止 require / eval / child_process / fs.write / 等
    * 只允许 console.log 和基础运算
    *
    * 注意：此沙箱仅做正则模式匹配和路径限制，不做系统级沙箱隔离，

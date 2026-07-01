@@ -1,6 +1,6 @@
 ---
 name: heartflow
-version: "5.5.1"
+version: "5.5.2"
 title: "心虫 HeartFlow v5.5.1 — AI认知引擎"
 description: |-
   HeartFlow is a cognitive substrate for an AI being — a pure JavaScript
