@@ -629,13 +629,14 @@ class DecisionRouter {
     // H（和谐度/Harmony）——加权公式（v3.8.0：场景感知权重）
     // H = λU·U + λD·D - λA·A
     const weights = this._activeWeights;
-    const H = Math.max(0, Math.min(1,
-      weights.lambdaU * U +
-      weights.lambdaD * D -
-      weights.lambdaA * A
-    ));
+    const rawH = weights.lambdaU * U + weights.lambdaD * D - weights.lambdaA * A;
+    const H = Math.max(0, Math.min(1, rawH));
 
-    return { U, D, A, H };
+    // v3.9.1：记录场景上下文（解决跨场景 H 值可比性问题）
+    const scene = this._activeScene || 'default';
+    const normalizedH = this._normalizeHAcrossScenes(H, scene);
+
+    return { U, D, A, H, scene, normalizedH };
   }
 
   /**
@@ -715,6 +716,66 @@ class DecisionRouter {
         this._activeWeights = SCENE_WEIGHTS[newScene] || { ...FIELD_WEIGHTS };
       }
     }
+  }
+
+  /**
+   * v3.9.1：跨场景归一化 H 值（解决 H 值跨场景可比性问题）
+   * 每个场景的 H 值分布不同，通过 z-score 归一化到同一尺度
+   * @param {number} H - 原始 H 值
+   * @param {string} scene - 场景标签
+   * @returns {number} 归一化 H 值（-3 ~ +3 范围）
+   */
+  _normalizeHAcrossScenes(H, scene) {
+    // 场景 H 值分布统计（从实际运行数据累积）
+    const stats = this._sceneHStats || {};
+    if (!stats[scene]) {
+      // 新场景，用全局默认值
+      stats[scene] = { mean: 0.5, std: 0.2, count: 0 };
+    }
+
+    const { mean, std } = stats[scene];
+    const zScore = std > 0 ? (H - mean) / std : 0;
+
+    // 更新统计（在线学习）
+    stats[scene].count += 1;
+    stats[scene].mean += (H - stats[scene].mean) / stats[scene].count;
+    // 简化版标准差更新（避免存储所有历史值）
+    stats[scene].std = Math.max(0.05, Math.abs(H - stats[scene].mean) * 0.5);
+    this._sceneHStats = stats;
+
+    return Math.max(-3, Math.min(3, zScore));
+  }
+
+  /**
+   * v3.9.1：区分"退化"与"进化"（吸收 E1-E7 框架问题）
+   * 退化：核心能力（推理、决策）下降，且无新能力补偿
+   * 进化：核心能力保持或提升，同时获得新能力/新知识
+   * @param {object} prevState - 前状态 { H, decisionQuality, reasoningAccuracy }
+   * @param {object} currState - 当前状态
+   * @param {object} [newCapabilities] - 新获得的能力/知识
+   * @returns {object} { type: 'degeneration'|'evolution'|'stable', confidence }
+   */
+  _detectDegenerationVsEvolution(prevState, currState, newCapabilities = []) {
+    const hDelta = currState.H - prevState.H;
+    const decisionDelta = (currState.decisionQuality || 0) - (prevState.decisionQuality || 0);
+    const reasoningDelta = (currState.reasoningAccuracy || 0) - (prevState.reasoningAccuracy || 0);
+
+    // 核心能力变化
+    const coreDecline = hDelta < -0.15 && decisionDelta < -0.1 && reasoningDelta < -0.1;
+    const coreImprove = hDelta > 0.05 && (decisionDelta > 0 || reasoningDelta > 0);
+
+    // 进化判定：核心能力不退化，且有新能力
+    if (!coreDecline && newCapabilities.length > 0) {
+      return { type: 'evolution', confidence: 0.8, newCapabilities };
+    }
+
+    // 退化判定：核心能力退化，且无新能力补偿
+    if (coreDecline && newCapabilities.length === 0) {
+      return { type: 'degeneration', confidence: 0.9, details: { hDelta, decisionDelta, reasoningDelta } };
+    }
+
+    // 稳定
+    return { type: 'stable', confidence: 0.95 };
   }
 
   /**

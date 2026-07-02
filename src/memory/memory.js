@@ -430,7 +430,34 @@ function store(opts) {
     timestamp: now,
     createdAt: now,
     updatedAt: now,
+    // v3.9.1: supersession support (absorb DanceNitra B-001 finding)
+    supersededBy: null,  // ID of newer version (if any)
+    isCurrent: true,      // false if superseded
+    version: opts.version || 1,
   };
+
+  // v3.9.1: Check for existing record of same type (supersession)
+  if (layer === 'learned' && opts.metadata?.type) {
+    const existingIds = Object.keys(_learnedStore).filter(id => {
+      try {
+        const decrypted = aesDecrypt(_learnedStore[id]);
+        return decrypted.metadata?.type === opts.metadata.type;
+      } catch (e) {
+        return false;
+      }
+    });
+    // Mark all existing as superseded
+    for (const oldId of existingIds) {
+      try {
+        const oldRecord = aesDecrypt(_learnedStore[oldId]);
+        oldRecord.supersededBy = id;
+        oldRecord.isCurrent = false;
+        _learnedStore[oldId] = aesEncrypt(oldRecord);
+      } catch (e) {
+        // ignore decryption errors for old records
+      }
+    }
+  }
 
   if (layer === 'core') {
     _coreStore[id] = record;
