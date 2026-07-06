@@ -65,6 +65,13 @@ const DEFAULTS = Object.freeze({
   captureStderr: true
 });
 
+// [P3 FIX] 资源限制：防止代码执行消耗过多资源
+const RESOURCE_LIMITS = Object.freeze({
+  maxMemoryMB:    256,    // 单次执行最大内存 256MB
+  maxConcurrent:  3,      // 最大并发执行数
+  cooldownMs:     1000,   // 执行冷却时间 1s
+});
+
 const MAX_OUTPUT_LIMIT = 1048576; // 1MB 绝对上限
 
 // ============================================================================
@@ -104,6 +111,18 @@ const DANGEROUS_COMMANDS = [
   /init\s+0/i,                 // init 0
   /halt/i,                     // halt
   /poweroff/i,                 // poweroff
+  /wget\s+.*\|\s*(bash|sh)/i, // wget ... | bash
+  /curl\s+.*\|\s*(bash|sh)/i, // curl ... | bash
+  />\s*\/dev\/sda/i,           // > /dev/sda
+  /pv\.*\/etc/i,               // pv /etc (may leak sensitive)
+  /cat\s+\/etc\/(shadow|passwd|sudoers)/i, // read sensitive files
+  /iptables\s+/i,              // iptables
+  /ufw\s+/i,                   // ufw
+  /systemctl\s+/i,             // systemctl
+  /docker\s+(rm|kill|stop|run\s+--privileged)/i, // dangerous docker
+  /`[^`]+`/i,             // [AUDIT-FIX] 反引号命令替换
+  /\$\([^)]*\)/i,         // [AUDIT-FIX] $() 命令替换
+  /base64\s+-d.*\|.*(?:bash|sh)/i, // [AUDIT-FIX] base64 解码后管道执行
 ];
 
 // ============================================================================
@@ -131,7 +150,9 @@ const SANDBOX_BLOCKED_PATTERNS = [
   /process\.dlopen/,
   /Reflect\.construct/,
   /Proxy\s*\(/,
-  /constructor\.constructor/,
+  /\(0,\s*constructor\.constructor\)/i,  // [AUDIT-FIX] 阻止 (0,constructor.constructor) 绕过
+  /\(1,\s*constructor\.constructor\)/i,  // [AUDIT-FIX] 阻止 (1,constructor.constructor) 绕过
+  /\[\s*\)\s*\]\s*constructor\.constructor/i, // [AUDIT-FIX] 阻止 Array 绕过
   /Buffer\.(alloc|from)/i,     // SkillSpector fix: 禁止 Buffer 操作（防止内存读取）
   /net\.(connect|createServer)/i, // SkillSpector fix: 禁止网络操作
   /http\.(request|get|createServer)/i,
@@ -414,11 +435,21 @@ class CodeExecutor {
    * @param {Object} [options.context] - 注入的上下文变量（仅 JavaScript）
    * @returns {Object} { status, output, error, duration, language, truncated, execError }
    */
-  execute(code, options = {}) {
+  async execute(code, options = {}) {
     // [v3.8.1] 运行时守卫：代码执行默认关闭
     if (!CODE_EXECUTOR_ENABLED) {
       return { status: ExecStatus.ERROR, output: '', error: 'Code execution is disabled. Set HEARTFLOW_CODE_EXECUTOR_ENABLED=true to enable.', duration: 0, language: 'none', truncated: false, execError: ExecError.PERMISSION };
     }
+    // [P3 FIX] 资源限制检查
+    const now = Date.now();
+    if (this._executionCount >= RESOURCE_LIMITS.maxConcurrent) {
+      if (now - this._lastExecutionTime < RESOURCE_LIMITS.cooldownMs) {
+        return { status: ExecStatus.ERROR, output: '', error: `执行冷却中，请等待 ${RESOURCE_LIMITS.cooldownMs}ms`, duration: 0, language: 'none', truncated: false, execError: ExecError.PERMISSION };
+      }
+      this._executionCount = 0;
+    }
+    this._executionCount++;
+    this._lastExecutionTime = now;
     validateArg(code, 'code', 'string');
 
     const opts = { ...DEFAULTS, ...options };
@@ -434,7 +465,7 @@ class CodeExecutor {
 
       switch (language) {
         case 'javascript':
-          result = this._executeJavaScript(code, opts);
+          result = await this._executeJavaScript(code, opts);
           break;
         case 'shell':
           result = this._executeShell(code, opts);
@@ -478,7 +509,7 @@ class CodeExecutor {
    * JavaScript 执行（沙箱隔离）
    * @private
    */
-  _executeJavaScript(code, opts) {
+  async _executeJavaScript(code, opts) {
     const timeout = opts.timeout || DEFAULTS.timeout;
     const maxOutput = opts.maxOutput || DEFAULTS.maxOutput;
     const context = opts.context || {};
@@ -487,6 +518,13 @@ class CodeExecutor {
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
+
+    // [AUDIT-FIX] 嵌套 try 确保 console 在同步/异步异常时都恢复
+    const _restoreConsole = () => {
+      console.log = originalLog;
+      console.error = originalError;
+      console.warn = originalWarn;
+    };
 
     // 重定向 console
     console.log = (...args) => {
@@ -551,9 +589,7 @@ class CodeExecutor {
 
     } finally {
       if (timerId) clearTimeout(timerId);
-      console.log = originalLog;
-      console.error = originalError;
-      console.warn = originalWarn;
+      _restoreConsole();
     }
   }
 
@@ -690,7 +726,8 @@ class CodeExecutor {
 
       const pythonCmd = this._getPythonCommand();
 
-      const result = _cp.execSync(`${pythonCmd} "${tmpFile}"`, {
+      // [AUDIT-FIX] 使用 execFileSync 数组参数避免 shell 注入
+      const result = _cp.execFileSync(pythonCmd, [tmpFile], {
         timeout,
         encoding: 'utf-8',
         maxBuffer: MAX_OUTPUT_LIMIT
@@ -837,7 +874,7 @@ class CodeExecutor {
    * @param {number} [options.maxOutput=10240] - 输出截断
    * @returns {Object} { status, output, error, duration, blocked, blockReason }
    */
-  sandbox(code, options = {}) {
+  async sandbox(code, options = {}) {
     validateArg(code, 'code', 'string');
 
     // [PROD] 生产环境移除 console.warn: console.warn('⚠️ 沙箱安全警告: 此执行器仅做路径限制，不做系统级沙箱隔离');
@@ -980,7 +1017,7 @@ ${code}
 
       const fn = new Function('console', sandboxedCode);
 
-      const result = this._executeWithTimeout(fn, timeout, [console]);
+      const result = await this._executeWithTimeout(fn, timeout, [console]);
 
       const truncated = capturedOutput.length > maxOutput;
       const output = truncateOutput(capturedOutput, maxOutput);

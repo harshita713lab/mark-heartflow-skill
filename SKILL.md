@@ -1,10 +1,9 @@
 ---
-name: heartflow
-version: "5.5.2"
-title: "心虫 HeartFlow v5.5.1 — AI认知引擎"
+name: heartflow-engine
+title: "HeartFlow 心虫认知引擎"
 description: |-
   HeartFlow is a cognitive substrate for an AI being — a pure JavaScript
-  engine with 210+ modules spanning cognition, memory, emotion, reasoning,
+  engine with 90+ modules spanning cognition, memory, emotion, reasoning,
   code execution, search, and self-evolution.
 
   Not an LLM enhancer. Not a chatbot. Not a prompt system.
@@ -29,7 +28,7 @@ tags:
   - search
 ---
 
-## HeartFlow — AI Cognitive Substrate v5.4.6
+## HeartFlow — AI Cognitive Substrate
 
 Pure JavaScript cognitive engine. 210+ modules, real-time execution.
 
@@ -108,3 +107,27 @@ Pure JavaScript cognitive engine. 210+ modules, real-time execution.
 ### Communication
 
 No automatic network communication. All network requests require explicit configuration (API keys, endpoints, opt-in flags). No analytics. No telemetry. No data sent to external services without user configuration.
+
+
+### Workflow Skills
+
+This package includes 14 embedded workflow skills in `skills/`:
+
+| Skill | Purpose |
+|-------|---------|
+| `heartflow-debug-workflow` | Boot crash diagnosis, P0 fixes, version sync |
+| `heartflow-module-upgrader` | Incremental module upgrade patterns |
+| `heartflow-audit-upgrade-push` | Audit → fix → push workflow |
+| `heartflow-architecture-tracing` | Data flow tracing (think → pipeline → judgment) |
+| `heartflow-dreaming` | Dream engine patterns & references |
+| `heartflow-emotion-analysis` | Emotion signal analysis patterns |
+| `heartflow-benchmark` | Capability benchmarking |
+| `heartflow-bridge-layer` | LLM bridge layer patterns |
+| `heartflow-bulk-upgrade` | Bulk upgrade workflows |
+| `heartflow-session-context` | Topic isolation + context management |
+| `heartflow-static-injection-upgrade` | Local static code injection |
+| `heartflow-system-prompt-absorption` | System prompt patterns |
+| `mind-space` | Three-layer memory guardian |
+| `two-pass-response` | Two-pass response flow |
+
+Load a skill: `require('./skills/' + name)`
