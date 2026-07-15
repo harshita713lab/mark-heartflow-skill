@@ -91,6 +91,11 @@ const DEFAULT_CONFIG = {
   maxBatchSize: 100,
   maxHistorySize: 50,
   thrashingThreshold: 0.7,
+<<<<<<< HEAD
+=======
+  // 引用计数保护：referenceCount >= 此值时禁止遗忘
+  referenceCountProtectionThreshold: 3,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 };
 
 // ============ INPUT VALIDATION ============
@@ -136,6 +141,7 @@ function safeString(val) {
   return String(val);
 }
 
+<<<<<<< HEAD
 // ============ CORE FUNCTIONS (keep originals for backward compat) ============
 
 /**
@@ -150,6 +156,63 @@ function getForgettingLevel(timestamp) {
   if (age < FORGETTING_LEVELS.MEDIUM_TERM.maxAge) return FORGETTING_LEVELS.MEDIUM_TERM;
   if (age < FORGETTING_LEVELS.LONG_TERM.maxAge) return FORGETTING_LEVELS.LONG_TERM;
   return FORGETTING_LEVELS.ARCHIVE;
+=======
+// ============ REFERENCE COUNT PROTECTION ============
+
+/**
+ * 检查记忆是否应被引用计数保护（禁止遗忘）。
+ * 规则：若 memory.referenceCount >= 配置阈值，则不可遗忘。
+ * 同时兼顾层级与关键标记。
+ */
+function isReferenceProtected(memory, config) {
+  const refCount = getField(memory, 'referenceCount', 0);
+  const threshold = config.referenceCountProtectionThreshold ?? DEFAULT_CONFIG.referenceCountProtectionThreshold;
+  if (refCount >= threshold) return true;
+  const layer = (getField(memory, 'layer', 'learned') || 'learned').toUpperCase();
+  if (layer === 'CORE') return true;
+  return false;
+}
+
+// ============ CORE FUNCTIONS (keep originals for backward compat) ============
+
+/**
+ * Calculate memory retention using Ebbinghaus forgetting curve.
+ * R(t) = e^(-t/S), where S is memory strength.
+ * t: time since encoding (ms), S: strength parameter (default 1 day in ms)
+ * Returns retention 0..1 (1 = perfectly retained)
+ */
+function ebbinghausRetention(ageMs, strengthMs) {
+  const S = strengthMs || 86400000; // default 1 day
+  const t = Math.max(ageMs, 0);
+  return Math.exp(-t / S);
+}
+
+/**
+ * Map retention 0..1 to compression level (matching original FORGETTING_LEVELS labels)
+ * retention > 0.9  → vivid (compression=1)
+ * retention > 0.7  → clear (compression=4)
+ * retention > 0.4  → faded (compression=10)
+ * retention > 0.15 → blurred (compression=16)
+ * else             → abstract (compression=20)
+ */
+function retentionToLevel(retention) {
+  if (retention > 0.9) return FORGETTING_LEVELS.RECENT;
+  if (retention > 0.7) return FORGETTING_LEVELS.SHORT_TERM;
+  if (retention > 0.4) return FORGETTING_LEVELS.MEDIUM_TERM;
+  if (retention > 0.15) return FORGETTING_LEVELS.LONG_TERM;
+  return FORGETTING_LEVELS.ARCHIVE;
+}
+
+/**
+ * Calculate forgetting level based on timestamp
+ * Now uses Ebbinghaus exponential decay instead of linear age brackets.
+ */
+function getForgettingLevel(timestamp, strengthMs) {
+  const ts = typeof timestamp === 'number' && !isNaN(timestamp) ? timestamp : Date.now();
+  const age = Date.now() - ts;
+  const retention = ebbinghausRetention(age, strengthMs);
+  return retentionToLevel(retention);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 }
 
 /**
@@ -321,6 +384,10 @@ class ForgettingEngine {
       errorCount: 0,
       oscillationWarnings: 0,
       totalBatchOps: 0,
+<<<<<<< HEAD
+=======
+      protectedCount: 0,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     };
 
     // Access history for oscillation detection
@@ -336,6 +403,13 @@ class ForgettingEngine {
       maxBatchSize: Math.max(1, Math.min(1000, options.maxBatchSize ?? DEFAULT_CONFIG.maxBatchSize)),
       maxHistorySize: Math.max(10, Math.min(200, options.maxHistorySize ?? DEFAULT_CONFIG.maxHistorySize)),
       thrashingThreshold: clamp(options.thrashingThreshold ?? DEFAULT_CONFIG.thrashingThreshold, 0, 1),
+<<<<<<< HEAD
+=======
+      referenceCountProtectionThreshold: options.referenceCountProtectionThreshold ?? DEFAULT_CONFIG.referenceCountProtectionThreshold,
+      // Ebbinghaus forgetting curve: memory strength (ms)
+      // S=1day => retention drops to ~37% after 1 day
+      ebbinghausStrengthMs: options.ebbinghausStrengthMs ?? 86400000,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     };
   }
 
@@ -493,7 +567,11 @@ class ForgettingEngine {
   }
 
   /**
+<<<<<<< HEAD
    * Check if a memory should be forgotten
+=======
+   * Check if a memory should be "forgotten"
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
    * @param {object} memory - Memory entry
    * @param {number} [threshold] - Custom threshold (0-1)
    * @returns {{ shouldForget: boolean, level: object, precision: number }}
@@ -508,6 +586,13 @@ class ForgettingEngine {
       return { shouldForget: true, level: null, precision: 0, error: validation.error, errorCode: validation.errorCode };
     }
 
+<<<<<<< HEAD
+=======
+    if (isReferenceProtected(memory, this._config)) {
+      return { shouldForget: false, level: getForgettingLevel(memory.timestamp || Date.now()), precision: 1, protected: true, reason: 'reference_count_or_core' };
+    }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     const thresh = threshold !== undefined ? clamp(threshold, 0, 1) : this._config.defaultThreshold;
     const level = getForgettingLevel(memory.timestamp || Date.now());
     const result = level.precision < thresh;
@@ -716,6 +801,29 @@ class ForgettingEngine {
         : 0,
     };
   }
+<<<<<<< HEAD
+=======
+
+  /**
+   * Calculate Ebbinghaus retention for a given age.
+   * @param {number} ageMs - Age of memory in milliseconds
+   * @returns {number} retention 0..1 (1 = perfectly retained)
+   */
+  ebbinghausRetention(ageMs) {
+    const S = this._config.ebbinghausStrengthMs || 86400000;
+    const t = Math.max(ageMs, 0);
+    return Math.exp(-t / S);
+  }
+
+  /**
+   * Calculate forgetting probability = 1 - retention.
+   * @param {number} ageMs
+   * @returns {number} forgetProbability 0..1
+   */
+  getForgettingProbability(ageMs) {
+    return 1 - this.ebbinghausRetention(ageMs);
+  }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 }
 
 // ============ PROXY WRAPPER FOR BACKWARD COMPAT ============

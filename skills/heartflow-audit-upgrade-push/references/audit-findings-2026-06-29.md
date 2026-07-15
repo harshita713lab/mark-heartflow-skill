@@ -37,7 +37,11 @@
 ### 6. MEDIUM: 300+ 处 console.* 残留
 - **文件**: 35 个文件
 - **问题**: 生产代码中残留 console.log/error/warn/info/debug
+<<<<<<< HEAD
 - **修复**: 注释掉并加 `[PROD]` 标记，保留原代码用于调试
+=======
+- **修复**: 注释掉并加 `已禁用` 标记，保留原代码用于调试
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 ### 7. MEDIUM: 11 处 var → const/let
 - **文件**: `src/core/cognitive-appraisal.js`

@@ -188,7 +188,10 @@ class TopicScope {
 
       // 存储容量告警：超过80%阈值时触发警告
       if (topicData.storeBytes > this._maxStoreBytes * 0.8) {
+<<<<<<< HEAD
         // [PROD] 生产环境移除 console.warn: console.warn(`[TopicScope] 话题[${this._current}]存储已达 ${topicData.storeBytes}/${this._maxStoreBytes} 字节`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       }
     }
     return this;
@@ -428,7 +431,10 @@ class TopicScope {
       if (!oldest) break; // 所有话题都在栈中，无法淘汰
       this._topics.delete(oldest);
       this._totalExpired++;
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn(`[TopicScope] 内存保护：淘汰话题[${oldest}]（超过最大${this._maxTopics}个话题上限）`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
   }
 
@@ -493,9 +499,13 @@ class TopicScope {
     if (typeof this._hooks[name] === 'function') {
       try {
         this._hooks[name](topic, this);
+<<<<<<< HEAD
       } catch (e) {
         // [PROD] 生产环境移除 console.warn: console.warn(`[TopicScope] 钩子[${name}]执行失败:`, e.message);
       }
+=======
+      } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
   }
 
@@ -563,6 +573,7 @@ class TopicScope {
    * 诊断：打印当前状态
    */
   diagnose(label = '') {
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.log: console.log(`\n=== TopicScope 诊断${label ? ' — ' + label : ''} ===`);
     // [PROD] 生产环境移除 console.log: console.log(`当前话题: ${this._current}`);
     // [PROD] 生产环境移除 console.log: console.log(`话题栈: [${this._stack.join(' → ')}]`);
@@ -572,6 +583,10 @@ class TopicScope {
     for (const [name, data] of this._topics) {
       const storeInfo = `(${data.storeBytes}字节, ${Object.keys(data.store).length}键)`;
       // [PROD] 生产环境移除 console.log: console.log(`  话题[${name}] store:`, Object.keys(data.store), storeInfo);
+=======
+    for (const [name, data] of this._topics) {
+      const storeInfo = `(${data.storeBytes}字节, ${Object.keys(data.store).length}键)`;
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
     return this;
   }

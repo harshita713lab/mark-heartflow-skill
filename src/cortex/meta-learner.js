@@ -5,6 +5,10 @@
  */
 
 const { MetaLearning } = require('./self-evolution/meta-learning.js');
+<<<<<<< HEAD
+=======
+const crypto = require('crypto');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 // ============================================================================
 // 教训类别枚举
@@ -120,7 +124,11 @@ class MetaLearner {
     const keywords = this._extractKeywords(parsed.content);
 
     const entry = {
+<<<<<<< HEAD
       id: `lesson-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+=======
+      id: `lesson-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       content: parsed.content,
       context: parsed.context || '',
       source: parsed.source || 'unknown',
@@ -537,7 +545,11 @@ class MetaLearner {
     const { condition, action } = this._parseConditionAction(content);
 
     const rule = {
+<<<<<<< HEAD
       id: `proc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+=======
+      id: `proc-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       condition: condition || 'always',
       action: action || content,
       category: this._categorize(content),

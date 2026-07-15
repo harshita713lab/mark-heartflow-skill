@@ -10,7 +10,11 @@ This reference provides a drop-in lightweight audit that checks the same 6 dimen
 
 ```bash
 node -e "
+<<<<<<< HEAD
 const fs=require('fs'),ROOT='/Users/apple/.hermes/skills/ai/mark-heartflow-skill',s={};
+=======
+const fs=require('fs'),ROOT='~/.hermes/skills/heartflow',s={};
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 ['VERSION','package.json','SKILL.md'].forEach(f=>{try{const c=fs.readFileSync(ROOT+'/'+f,'utf-8');if(f==='VERSION')s.VERSION=c.trim();else if(f==='package.json')s['package.json']=JSON.parse(c).version;else if(f==='SKILL.md'){const m=c.match(/version:\\s*\"?([^\"\\n]+)\"?/);if(m)s['SKILL.md']=m[1].trim()}}catch(e){}});
 ['src/core/version.js','src/core/heartflow.js'].forEach(f=>{try{const c=fs.readFileSync(ROOT+'/'+f,'utf-8');const m=c.match(/(?:const\\s+VERSION|version)\\s*[:=]\\s*['\"](\\d+\\.\\d+\\.\\d+)['\"]/);if(m)s[f]=m[1]}catch(e){}});
 const v=Object.values(s).filter(Boolean),u=[...new Set(v)];
@@ -27,7 +31,11 @@ Save as `/tmp/hf-lite-audit.js` and run with `node /tmp/hf-lite-audit.js`:
 ```javascript
 const fs = require('fs');
 const path = require('path');
+<<<<<<< HEAD
 const ROOT = '/Users/apple/.hermes/skills/ai/mark-heartflow-skill';
+=======
+const ROOT = '~/.hermes/skills/heartflow';
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const IGNORE = ['node_modules','.git','__pycache__','dist','build','.next','.nuxt','venv','.venv','env','.env','coverage','.nyc_output','data','memory','logs','backup'];
 
 function scanFiles(dir) {

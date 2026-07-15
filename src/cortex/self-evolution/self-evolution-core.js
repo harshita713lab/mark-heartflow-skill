@@ -9,10 +9,35 @@
  * - Reflexion 自我反思模式
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 const { HealingMemoryRL } = require('../self-healing-rl.js');
 
+=======
+const fs = require('../../utils/safe-fs');
+const path = require('path');
+const { HealingMemoryRL } = require('../self-healing-rl.js');
+
+// === 待验证修复 Map 最大容量 ===
+const MAX_MAP_SIZE = 200;
+
+/**
+ * 带容量保护的 Map.set — 超出容量时淘汰最早插入的条目（LRU）
+ * @param {Map} map - 目标 Map
+ * @param {*} key - 键
+ * @param {*} value - 值
+ * @param {number} maxSize - 最大容量
+ */
+function _boundedSet(map, key, value, maxSize) {
+  if (map.size >= maxSize && !map.has(key)) {
+    const firstKey = map.keys().next().value;
+    map.delete(firstKey);
+  }
+  map.set(key, value);
+}
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 class SelfEvolutionCore {
   constructor(projectRoot) {
     // 路径验证 - 防止路径遍历攻击
@@ -77,9 +102,13 @@ class SelfEvolutionCore {
         const data = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
         this.state = { ...this.state, ...data };
       }
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.error: console.error('[SelfEvolution] 加载状态失败，使用默认');
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   saveState() {
@@ -113,7 +142,10 @@ class SelfEvolutionCore {
       iterationCount++;
       const iterationStart = Date.now();
       
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.error: console.error(`[SelfEvolution] 迭代 ${iterationCount}/${maxIterations}`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       
       // 1. 目标生成或更新
       const goals = this.generateGoals(input, context);
@@ -142,7 +174,10 @@ class SelfEvolutionCore {
       if (iterationCount > 1) {
         const improvementDelta = Math.abs(previousImprovement - currentImprovement);
         if (improvementDelta < convergenceThreshold) {
+<<<<<<< HEAD
           // [PROD] 生产环境移除 console.error: console.error(`[SelfEvolution] 收敛检测: 改进 ${improvementDelta.toFixed(4)} < 阈值 ${convergenceThreshold}, 停止迭代`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
           converged = true;
         }
       }
@@ -654,7 +689,11 @@ class SelfEvolutionCore {
     const backoffMs = this._BACKOFF[strategy] || 0;
 
     // 记录待验证的修复策略
+<<<<<<< HEAD
     this._pendingHeal.set(errorMsg, { errorType, strategy, ts: Date.now() });
+=======
+    _boundedSet(this._pendingHeal, errorMsg, { errorType, strategy, ts: Date.now() }, MAX_MAP_SIZE);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
     // 生成修复提示
     const hints = this._generateRepairHints(errorType, errorMsg);

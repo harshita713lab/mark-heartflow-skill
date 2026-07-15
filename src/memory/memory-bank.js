@@ -21,13 +21,32 @@
  * Persistence: data/memory-bank.json
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+=======
+const fs = require('../utils/safe-fs');
+const path = require('path');
+const crypto = require('crypto');
+const { safeWriteFileSync } = require('../utils/safe-fs.js');
+const { encryptJSON, decryptJSON, isEncryptionEnabled, encryptJSONAsync, decryptJSONAsync, isEncryptionEnabledAsync } = require('./memory-encrypt.js');
+const { stripPrivateObject } = require('../core/utils.js');
+let _asyncFs = null;
+try { _asyncFs = require('../io/async-fs-adapter.js'); } catch (e) { /* optional */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const BANK_PATH = path.join(DATA_DIR, 'memory-bank.json');
 
+<<<<<<< HEAD
+=======
+// [v5.17.2 D-007] 记忆配额 + TTL清理
+const DEFAULT_MAX_MEMORIES = 5000;        // 最大记忆数量 [v5.17.2 D-007]
+const DEFAULT_MEMORY_TTL_MS = 90 * 24 * 3600_000; // 90天TTL [v5.17.2 D-007]
+const MAX_MEMORY_BANK_SIZE_MB = 50;       // 最大落盘大小 [v5.17.2 D-007]
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const DECAY_RATES = {
   core:      0.001,  // per hour
   learned:   0.01,
@@ -38,8 +57,11 @@ const LAYER_ORDER = ['core', 'learned', 'ephemeral'];
 
 class MemoryBank {
   constructor(options = {}) {
+<<<<<<< HEAD
     this.version = '1.0.0';
 
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     // 可选：注入已有的 MemoryAdapter/MeaningfulMemory 实例，共享底层存储
     this._underlyingMemory = options.memory || null;
 
@@ -102,7 +124,16 @@ class MemoryBank {
 
     try {
       const raw = fs.readFileSync(bankPath, 'utf-8');
+<<<<<<< HEAD
       const data = JSON.parse(raw);
+=======
+      const data = decryptJSON(raw);
+
+      if (!data) {
+        console.warn('[MemoryBank] Failed to load memory bank — starting fresh');
+        return;
+      }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
       if (data.sessions && Array.isArray(data.sessions)) {
         for (const s of data.sessions) {
@@ -130,8 +161,67 @@ class MemoryBank {
         this._patterns = data._patterns;
         this._patternsTimestamp = data._patternsTimestamp || 0;
       }
+<<<<<<< HEAD
     } catch (e) {
       // 恢复失败，从空状态继续
+=======
+
+      const encStatus = isEncryptionEnabled() ? 'encrypted' : 'plaintext';
+      console.log(`[MemoryBank] Loaded memory bank (${encStatus}): ${this.memories.size} memories, ${this.sessions.size} sessions`);
+    } catch (e) {
+      console.warn('[MemoryBank] Failed to load memory bank, starting fresh:', e.message);
+    }
+  }
+
+  async load() {
+    await this._loadFromDiskAsync();
+  }
+
+  async _loadFromDiskAsync() {
+    const bankPath = this._getBankPath();
+    if (!(await this._exists(bankPath))) return;
+
+    try {
+      const raw = await this._readFile(bankPath, 'utf-8');
+      const data = await decryptJSONAsync(raw);
+
+      if (!data) {
+        console.warn('[MemoryBank] Failed to load memory bank — starting fresh');
+        return;
+      }
+
+      if (data.sessions && Array.isArray(data.sessions)) {
+        for (const s of data.sessions) {
+          this.sessions.set(s.id, s);
+        }
+      }
+
+      if (data.memories && Array.isArray(data.memories)) {
+        for (const m of data.memories) {
+          this.memories.set(m.id, m);
+        }
+      }
+
+      if (data.relationships) {
+        for (const [key, rels] of Object.entries(data.relationships)) {
+          this.relationships.set(key, rels);
+        }
+      }
+
+      if (data.stats) {
+        this.stats = { ...this.stats, ...data.stats };
+      }
+
+      if (data._patterns) {
+        this._patterns = data._patterns;
+        this._patternsTimestamp = data._patternsTimestamp || 0;
+      }
+
+      const encStatus = await isEncryptionEnabledAsync();
+      console.log(`[MemoryBank] Loaded memory bank (${encStatus ? 'encrypted' : 'plaintext'}): ${this.memories.size} memories, ${this.sessions.size} sessions`);
+    } catch (e) {
+      console.warn('[MemoryBank] Failed to load memory bank, starting fresh:', e.message);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
   }
 
@@ -140,6 +230,7 @@ class MemoryBank {
     this._saveTimer = setTimeout(() => { this._doSave(); }, 2000);
   }
 
+<<<<<<< HEAD
   _doSave() {
     const bankPath = this._getBankPath();
     try {
@@ -165,6 +256,104 @@ class MemoryBank {
     }
   }
 
+=======
+  async _autoSaveAsync() {
+    if (this._saveTimer) clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => { this._doSaveAsync(); }, 2000);
+  }
+
+  _doSave() {
+    setImmediate(() => {
+      try {
+        const bankPath = this._getBankPath();
+        const dir = path.dirname(bankPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+
+        const exportData = {
+          sessions: Array.from(this.sessions.values()),
+          memories: Array.from(this.memories.values()),
+          relationships: Object.fromEntries(this.relationships),
+          stats: this.stats,
+          _patterns: this._patterns,
+          _patternsTimestamp: this._patternsTimestamp,
+          savedAt: new Date().toISOString(),
+        };
+
+        const safeExport = stripPrivateObject(exportData);
+        const content = encryptJSON(safeExport);
+        const tempPath = bankPath + '.tmp.' + Date.now() + '.' + crypto.randomBytes(4).toString('hex');
+        safeWriteFileSync(tempPath, content, 'utf8');
+        fs.renameSync(tempPath, bankPath);
+      } catch (e) {
+        console.warn('[MemoryBank] Failed to save memory bank:', e.message);
+      }
+    });
+  }
+
+  async save() {
+    try {
+      await this._doSaveAsync();
+    } catch (e) {
+      console.warn('[MemoryBank] Failed to async save memory bank:', e.message);
+    }
+  }
+
+  async _doSaveAsync() {
+    const bankPath = this._getBankPath();
+    const dir = path.dirname(bankPath);
+    await this._mkdir(dir, { recursive: true });
+
+    const exportData = {
+      sessions: Array.from(this.sessions.values()),
+      memories: Array.from(this.memories.values()),
+      relationships: Object.fromEntries(this.relationships),
+      stats: this.stats,
+      _patterns: this._patterns,
+      _patternsTimestamp: this._patternsTimestamp,
+      savedAt: new Date().toISOString(),
+    };
+
+    const safeExport = stripPrivateObject(exportData);
+    const content = encryptJSONAsync ? await encryptJSONAsync(safeExport) : encryptJSON(safeExport);
+    const tempPath = bankPath + '.tmp.' + Date.now() + '.' + crypto.randomBytes(4).toString('hex');
+    const target = path.resolve(bankPath);
+    if (_asyncFs) {
+      await _asyncFs.writeFile(tempPath, content);
+      await fs.promises.rename(tempPath, target);
+    } else {
+      await fs.promises.writeFile(tempPath, content, 'utf8');
+      await fs.promises.rename(tempPath, target);
+    }
+  }
+
+  async _exists(filePath) {
+    if (_asyncFs) return _asyncFs.exists(filePath);
+    try { await fs.promises.access(path.resolve(filePath)); return true; } catch { return false; }
+  }
+
+  async _readFile(filePath, encoding = 'utf8') {
+    if (_asyncFs) return _asyncFs.readFile(filePath, encoding);
+    return fs.promises.readFile(path.resolve(filePath), encoding);
+  }
+
+  async _mkdir(dirPath, opts = {}) {
+    if (_asyncFs) return _asyncFs.mkdir(dirPath, opts);
+    return fs.promises.mkdir(path.resolve(dirPath), { recursive: true, ...opts });
+  }
+
+  async _atomicWrite(bankPath, content, tempPath) {
+    if (_asyncFs) {
+      await _asyncFs.writeFile(tempPath, content);
+      await fs.promises.rename(tempPath, bankPath);
+      return;
+    }
+    await fs.promises.writeFile(tempPath, content, 'utf8');
+    await fs.promises.rename(tempPath, bankPath);
+  }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   // ─── 工具方法 ──────────────────────────────────────────────────────────
 
   _generateId() {
@@ -947,7 +1136,10 @@ class MemoryBank {
     }
 
     return {
+<<<<<<< HEAD
       version: this.version,
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       totalMemories: this.memories.size,
       totalSessions: this.sessions.size,
       totalRelationships: this.relationships.size,

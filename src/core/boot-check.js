@@ -18,7 +18,11 @@
  *   const suggestions = getFixSuggestions(); // 获取修复建议列表
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const path = require('path');
 
 // 引擎根目录: src/core/boot-check.js → 引擎根目录
@@ -390,10 +394,14 @@ function getFixSuggestions(silent = false) {
   const suggestions = _generateFixSuggestions(fileResults, moduleResults, versionCheck);
 
   if (!silent && suggestions.length > 0) {
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.log: console.log(`\n[HeartFlow] Boot Check — ${suggestions.length} fix suggestions:`);
     for (const s of suggestions) {
       // [PROD] 生产环境移除 console.log: console.log(`  [${s.severity}] ${s.message}`);
       // [PROD] 生产环境移除 console.log: console.log(`    → ${s.action}`);
+=======
+    for (const s of suggestions) {
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
   }
 
@@ -490,6 +498,7 @@ function bootCheck(silent = false) {
 
   if (!silent) {
     const icon = allPass ? '✓' : '⚠';
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.log: console.log(`\n[HeartFlow] ${icon} Boot Check v1.1.0 — ${report.version} — ${report.summary.status}`);
     // [PROD] 生产环境移除 console.log: console.log(`  Health: ${health.score}/100 (${health.grade}) — ${suggestions.length} fixable issue(s)`);
     // [PROD] 生产环境移除 console.log: console.log(`  Files: ${filePassed}/${CORE_CHECKS.length} passed${fileFailed > 0 ? ` (${fileFailed} required failed)` : ''}`);
@@ -499,11 +508,18 @@ function bootCheck(silent = false) {
       // [PROD] 生产环境移除 console.log: console.log(`    ${icon} ${r.id}: ${r.status}${req} — ${r.detail}`);
     });
     // [PROD] 生产环境移除 console.log: console.log(`  Modules: ${modulePassed}/${MODULE_CHECKS.length} passed (${totalLoadMs.toFixed(1)}ms total, ${cachedCount} cached, ${freshCount} fresh)`);
+=======
+    fileResults.forEach(r => {
+      const icon = r.status === 'PASS' ? '✓' : r.status === 'MISSING' ? '?' : r.status === 'FAIL' ? '✗' : '!';
+      const req = r.required ? ' [REQUIRED]' : '';
+    });
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     moduleResults.forEach(r => {
       const icon = r.status === 'PASS' ? '✓' : '✗';
       const timeStr = r.loadMs ? `${r.loadMs.toFixed(1)}ms` : '?';
       const versionStr = r.modVersion ? ` v${r.modVersion}` : '';
       const cacheStr = r.fromCache ? ' [cached]' : ' [fresh]';
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.log: console.log(`    ${icon} ${r.id}: ${r.status}${versionStr} — ${timeStr}${r.status === 'PASS' ? cacheStr : ''}`);
     });
     if (versionCheck.consistent) {
@@ -520,6 +536,16 @@ function bootCheck(silent = false) {
       // [PROD] 生产环境移除 console.log: console.log(`  Fix suggestions (${suggestions.length}):`);
       suggestions.slice(0, 5).forEach(s => {
         // [PROD] 生产环境移除 console.log: console.log(`    [${s.severity}] ${s.message}`);
+=======
+    });
+    if (versionCheck.consistent) {
+    } else {
+    }
+    for (const [dim, info] of Object.entries(health.breakdown)) {
+    }
+    if (suggestions.length > 0) {
+      suggestions.slice(0, 5).forEach(s => {
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       });
     }
   }

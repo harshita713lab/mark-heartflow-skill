@@ -95,6 +95,10 @@ class MemoryConsolidator {
       forgotten: 0,
       associated: 0,
       summarized: 0,
+<<<<<<< HEAD
+=======
+      replayed: 0,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     };
 
     try {
@@ -110,6 +114,18 @@ class MemoryConsolidator {
       // 4. 记录巩固
       this.consolidationCount++;
       this.lastConsolidation = new Date().toISOString();
+<<<<<<< HEAD
+=======
+
+      // 5. v5.9.9: 经验回放 —— 从近期记忆采样回放以强化（模拟睡眠海马回放）
+      try {
+        const recent = await this._getRecentMemoryIds();
+        if (Array.isArray(recent) && recent.length > 0) {
+          const replayed = this.sampleReplay(recent, Math.min(8, recent.length));
+          results.replayed = replayed.length;
+        }
+      } catch (e) { /* 回放失败不影响巩固 */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     } catch (e) {
       // 静默失败
     }
@@ -122,6 +138,37 @@ class MemoryConsolidator {
   }
 
   /**
+<<<<<<< HEAD
+=======
+   * 经验回放采样（v5.9.9 新增，使用 FormulaBridge.experienceReplay）
+   * 从记忆缓冲区采样一批"回放"以强化（模拟睡眠期海马回放）。
+   * @param {Array} buffer - 记忆 id / 记忆对象数组
+   * @param {number} [batchSize=8] - 回放批大小
+   * @returns {Array} 采样出的回放项
+   */
+  sampleReplay(buffer, batchSize = 8) {
+    try {
+      const { getCognitiveBridge } = require('../formula/cognitive-bridge.js');
+      const b = getCognitiveBridge();
+      return b.experienceReplay(buffer, batchSize);
+    } catch (e) { return []; }
+  }
+
+  /**
+   * 获取近期记忆 id 列表（供经验回放）。
+   * 默认返回空数组（具体记忆系统需 override 或注入）。
+   */
+  async _getRecentMemoryIds() {
+    return this._recentMemoryIds || [];
+  }
+
+  /** 注入近期记忆 id（由外部记忆系统调用） */
+  setRecentMemoryIds(ids) {
+    this._recentMemoryIds = Array.isArray(ids) ? ids : [];
+  }
+
+  /**
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
    * 应用遗忘曲线 (Ebbinghaus)
    * 根据记忆的访问频率和时间衰减其强度
    */

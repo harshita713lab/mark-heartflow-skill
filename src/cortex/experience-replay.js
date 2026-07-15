@@ -12,7 +12,11 @@
  * - 新增 selfDiagnostic() 自诊断模式
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const { atomicWrite } = require('../utils/atomic-write');
 const path = require('path');
 
@@ -106,7 +110,10 @@ class ExperienceReplay {
       // 验证结构完整性
       const validation = this.validateReportIntegrity(parsed, 'patternFile');
       if (!validation.valid) {
+<<<<<<< HEAD
         // [PROD] 生产环境移除 console.warn: console.warn('[ExperienceReplay] Pattern file integrity check failed:', validation.error);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         if (validation.severity === 'critical') {
           return this.selfHealCorruptedFile('patternFile');
         }
@@ -115,7 +122,10 @@ class ExperienceReplay {
       }
       return parsed;
     } catch (e) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn('[ExperienceReplay] loadPatterns failed:', e.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return this.selfHealCorruptedFile('patternFile');
     }
   }
@@ -131,17 +141,26 @@ class ExperienceReplay {
       const stats = fs.statSync(filePath);
       // 空文件检测
       if (stats.size === 0) {
+<<<<<<< HEAD
         // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Empty file detected: ${filePath}`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         return null;
       }
       // 过大文件检测（>10MB视为异常）
       if (stats.size > 10 * 1024 * 1024) {
+<<<<<<< HEAD
         // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Abnormally large file (${stats.size}B): ${filePath}`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         return null;
       }
       return fs.readFileSync(filePath, 'utf8');
     } catch (e) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] readFileWithIntegrityCheck failed for ${filePath}:`, e.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return null;
     }
   }
@@ -197,7 +216,10 @@ class ExperienceReplay {
    */
   selfHealCorruptedFile(source) {
     const healAction = SelfHealAction.FALLBACK_TO_DEFAULTS;
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Self-healing ${source} via ${healAction}`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
     // 尝试从备份恢复
     try {
@@ -207,7 +229,10 @@ class ExperienceReplay {
         const backupData = JSON.parse(backupContent);
         const validation = this.validateReportIntegrity(backupData, 'backup');
         if (validation.valid) {
+<<<<<<< HEAD
           // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Recovered ${source} from backup`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
           return backupData;
         }
       }
@@ -221,11 +246,16 @@ class ExperienceReplay {
         // 保留原始文件作为 .corrupted 备份
         const corruptedPath = this.patternFile + '.corrupted';
         fs.renameSync(this.patternFile, corruptedPath);
+<<<<<<< HEAD
         // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Moved corrupted ${source} to ${corruptedPath}`);
       }
     } catch (e) {
       // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Failed to backup corrupted file:`, e.message);
     }
+=======
+      }
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
     return { patterns: [], lastUpdate: null };
   }
@@ -257,7 +287,10 @@ class ExperienceReplay {
       }
     }
 
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Repaired patterns: ${repaired.patterns.length} valid entries`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return repaired;
   }
 
@@ -284,11 +317,17 @@ class ExperienceReplay {
       } catch (e) {
         if (attempt < RETRY_CONFIG.MAX_RETRIES) {
           const delay = RETRY_CONFIG.BASE_DELAY_MS * Math.pow(RETRY_CONFIG.BACKOFF_FACTOR, attempt);
+<<<<<<< HEAD
           // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] savePatterns attempt ${attempt + 1} failed, retrying in ${delay}ms:`, e.message);
           await new Promise(r => setTimeout(r, delay));
           return saveWithRetry(attempt + 1);
         }
         // [PROD] 生产环境移除 console.error: console.error(`[ExperienceReplay] savePatterns failed after ${RETRY_CONFIG.MAX_RETRIES} retries:`, e.message);
+=======
+          await new Promise(r => setTimeout(r, delay));
+          return saveWithRetry(attempt + 1);
+        }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         return false;
       }
     };
@@ -358,7 +397,10 @@ class ExperienceReplay {
     // 震荡检测：检查最近N个报告中模式是否在反复切换
     const oscillationResult = this.detectOscillation(reports);
     if (oscillationResult.type !== PatternOscillation.NONE) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Oscillation detected: ${oscillationResult.type}, dampening pattern activation`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
 
     const patterns = this.identifyPatterns(latestReport);
@@ -470,7 +512,10 @@ class ExperienceReplay {
         // 检查历史：如果这个模式已经被检测到多次震荡，完全抑制
         const existing = this.patterns.patterns?.find(ex => ex.key === p.key);
         if (existing && existing.oscillationCount >= 2) {
+<<<<<<< HEAD
           // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Suppressing oscillating pattern: ${p.key} (count: ${existing.oscillationCount})`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
           return false;
         }
         // 首次震荡：降低优先级
@@ -509,7 +554,10 @@ class ExperienceReplay {
     }
 
     if (agedCount > 0) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] Aged ${agedCount} patterns (half-life: ${OSCILLATION_CONFIG.DECAY_HALF_LIFE}d)`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       this.patterns.lastUpdate = new Date().toISOString();
       this.savePatterns();
     }
@@ -594,7 +642,10 @@ class ExperienceReplay {
 
         // 验证报告数组结构
         if (!Array.isArray(reports)) {
+<<<<<<< HEAD
           // [PROD] 生产环境移除 console.warn: console.warn('[ExperienceReplay] loadReports: 报告文件顶层不是数组，尝试修复');
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
           // 尝试将单个报告包装为数组
           if (reports && typeof reports === 'object') {
             return [reports];
@@ -606,10 +657,15 @@ class ExperienceReplay {
       } catch (e) {
         if (attempt < RETRY_CONFIG.MAX_RETRIES) {
           const delay = RETRY_CONFIG.BASE_DELAY_MS * Math.pow(RETRY_CONFIG.BACKOFF_FACTOR, attempt);
+<<<<<<< HEAD
           // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] loadReports attempt ${attempt + 1} failed, retrying in ${delay}ms:`, e.message);
           return loadWithFallback(attempt + 1);
         }
         // [PROD] 生产环境移除 console.error: console.error('[ExperienceReplay] loadReports failed after retries:', e.message);
+=======
+          return loadWithFallback(attempt + 1);
+        }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         return [];
       }
     };
@@ -754,11 +810,17 @@ class ExperienceReplay {
           try {
             allSuggestions = JSON.parse(raw);
             if (!Array.isArray(allSuggestions)) {
+<<<<<<< HEAD
               // [PROD] 生产环境移除 console.warn: console.warn('[ExperienceReplay] saveSuggestions: 建议文件不是数组，重建');
               allSuggestions = [];
             }
           } catch (e) {
             // [PROD] 生产环境移除 console.warn: console.warn('[ExperienceReplay] saveSuggestions: 建议文件损坏，重建');
+=======
+              allSuggestions = [];
+            }
+          } catch (e) {
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
             // 保留损坏文件作为备份
             try {
               fs.renameSync(this.suggestionFile, this.suggestionFile + '.corrupted');
@@ -783,7 +845,10 @@ class ExperienceReplay {
       } catch (e) {
         if (attempt < RETRY_CONFIG.MAX_RETRIES) {
           const delay = RETRY_CONFIG.BASE_DELAY_MS * Math.pow(RETRY_CONFIG.BACKOFF_FACTOR, attempt);
+<<<<<<< HEAD
           // [PROD] 生产环境移除 console.warn: console.warn(`[ExperienceReplay] saveSuggestions attempt ${attempt + 1} failed, retrying in ${delay}ms:`, e.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
           await new Promise(r => setTimeout(r, delay));
           return saveWithRetry(attempt + 1);
         }
@@ -858,7 +923,10 @@ class ExperienceReplay {
       if (raw === null) return [];
       return JSON.parse(raw);
     } catch (e) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn('[ExperienceReplay] getHistory failed:', e.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return [];
     }
   }

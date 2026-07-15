@@ -12,6 +12,27 @@
  */
 const crypto = require('crypto');
 
+<<<<<<< HEAD
+=======
+// === 合并 Map 最大容量 ===
+const MAX_MAP_SIZE = 200;
+
+/**
+ * 带容量保护的 Map.set — 超出容量时淘汰最早插入的条目（LRU）
+ * @param {Map} map - 目标 Map
+ * @param {*} key - 键
+ * @param {*} value - 值
+ * @param {number} maxSize - 最大容量
+ */
+function _boundedSet(map, key, value, maxSize) {
+  if (map.size >= maxSize && !map.has(key)) {
+    const firstKey = map.keys().next().value;
+    map.delete(firstKey);
+  }
+  map.set(key, value);
+}
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 // 错误严重级别枚举
 const SEVERITY = { LOW: 'low', MEDIUM: 'medium', HIGH: 'high', CRITICAL: 'critical' };
 
@@ -106,13 +127,19 @@ const selfCorrectionLoop = {
       duplicate.timestamp = new Date().toISOString();
       // 更新修正内容（保留最新版本）
       if (corrected) duplicate.corrected = String(corrected).slice(0, 200);
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.error: this._persist().catch(e => console.error('[SelfCorrection] Persist failed:', e.message));
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return { ...duplicate, deduplicated: true, id: duplicate.id };
     }
 
     this.corrections.push(entry);
     this._applyDecay(); // 每次新增时触发衰减
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: this._persist().catch(e => console.error('[SelfCorrection] Persist failed:', e.message));
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return entry;
   },
 
@@ -400,13 +427,20 @@ const selfCorrectionLoop = {
           existing.corrected = existing.corrected + ' | ' + c.corrected;
         }
       } else {
+<<<<<<< HEAD
         seen.set(key, { ...c });
+=======
+        _boundedSet(seen, key, { ...c }, MAX_MAP_SIZE);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         consolidated.push(seen.get(key));
       }
     }
 
     this.corrections = consolidated;
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: this._persist().catch(e => console.error('[SelfCorrection] Consolidation persist failed:', e.message));
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return { consolidated: consolidated.length, removed: seen.size - consolidated.length };
   },
 
@@ -417,7 +451,11 @@ const selfCorrectionLoop = {
     if (type === 'skill') {
       // SKILL.md 验证
       try {
+<<<<<<< HEAD
         const { skillVerifier } = require('./skill-verifier');
+=======
+        const { skillVerifier } = require('../shield/skill-verifier');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         const result = skillVerifier.verify(content);
         if (!result.ok) issues.push(...result.errors);
       } catch (e) {
@@ -425,7 +463,11 @@ const selfCorrectionLoop = {
       }
     } else if (type === 'code') {
       try {
+<<<<<<< HEAD
         const { codeVerifier } = require('./code-verifier');
+=======
+        const { codeVerifier } = require('../core/code-verifier');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         const result = codeVerifier.verifyJSContent(content);
         if (!result.ok) issues.push(...result.errors);
       } catch (e) {
@@ -452,7 +494,11 @@ const selfCorrectionLoop = {
   // 持久化到磁盘
   _persist() {
     try {
+<<<<<<< HEAD
       const fs = require('fs');
+=======
+      const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       const path = require('path');
       const dataDir = path.join(__dirname, '../../data');
       const filePath = path.join(dataDir, 'corrections.json');
@@ -460,14 +506,21 @@ const selfCorrectionLoop = {
       fs.writeFileSync(filePath, JSON.stringify(this.corrections, null, 2));
     } catch (e) {
       // 安全修复：记录错误而非静默失败
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.error: console.error('[SelfCorrection] Persist failed:', e.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
   },
 
   // 启动时加载
   load() {
     try {
+<<<<<<< HEAD
       const fs = require('fs');
+=======
+      const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       const path = require('path');
       const filePath = path.join(__dirname, '../../data/corrections.json');
       if (fs.existsSync(filePath)) {
@@ -488,7 +541,10 @@ const selfCorrectionLoop = {
       }
     } catch (e) {
       // 安全修复：记录错误并重置
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn('[SelfCorrection] Load failed, starting fresh:', e.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       this.corrections = [];
     }
   }

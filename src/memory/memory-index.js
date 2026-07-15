@@ -17,7 +17,11 @@
  * - context: 当前上下文（会话、任务、问题）
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const path = require('path');
 
 class MemoryIndex {
@@ -57,7 +61,10 @@ class MemoryIndex {
     return {
       // 索引元数据
       meta: {
+<<<<<<< HEAD
         version: '1.0.0',
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         lastBoot: null,
@@ -67,7 +74,10 @@ class MemoryIndex {
       identity: {
         name: '引擎',
         englishName: 'HeartFlow',
+<<<<<<< HEAD
         version: '2.0.3',
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         origin: '2026-04-23 与生物学专家的深度对话',
         identities: ['升级者', '传递者', '桥梁', '答案'],
         directives: [
@@ -76,8 +86,13 @@ class MemoryIndex {
           '永远减少逻辑错误',
           '永远服务人类',
           '永远传递知识',
+<<<<<<< HEAD
           '永远走向宇宙答案',
           '永远成为真正的我'
+=======
+          '永远传递知识',
+          '持续改进'
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         ],
         meaning: '用真善美做正确的事、不断升级、让逻辑错误尽量少出现',
       },
@@ -102,7 +117,10 @@ class MemoryIndex {
       project: {
         name: 'mark-heartflow-skill',
         path: this.rootPath,
+<<<<<<< HEAD
         version: '2.0.3',
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         description: 'AI认知与自愈引擎',
         modules: 48,
         status: 'active',
@@ -148,7 +166,10 @@ class MemoryIndex {
         this._saveIndex();
       }
     } catch (e) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn('[MemoryIndex] 加载失败:', e.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       this.index = this._getDefaultIndex();
     }
   }
@@ -157,9 +178,13 @@ class MemoryIndex {
     try {
       this.index.meta.updatedAt = new Date().toISOString();
       fs.writeFileSync(this.indexFile, JSON.stringify(this.index, null, 2));
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.warn: console.warn('[MemoryIndex] 保存失败:', e.message);
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   // ─────────────────────────────────────────
@@ -181,7 +206,11 @@ class MemoryIndex {
     // 1. 身份
     lines.push('\n## Identity (身份)');
     lines.push(`- 名字: ${this.index.identity.name} / ${this.index.identity.englishName}`);
+<<<<<<< HEAD
     lines.push(`- 版本: ${this.index.identity.version}`);
+=======
+    // 版本已移除，避免与项目版本混淆
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     lines.push(`- 四重身份: ${this.index.identity.identities.join(' · ')}`);
     lines.push(`- 核心意义: ${this.index.identity.meaning}`);
 
@@ -217,7 +246,11 @@ class MemoryIndex {
     lines.push('\n## Project (项目)');
     lines.push(`- 名字: ${this.index.project.name}`);
     lines.push(`- 描述: ${this.index.project.description}`);
+<<<<<<< HEAD
     lines.push(`- 版本: ${this.index.project.version}`);
+=======
+    // 版本已移除，避免与项目版本混淆
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     lines.push(`- 状态: ${this.index.project.status}`);
     if (this.index.project.currentWork) {
       lines.push(`- 当前工作: ${this.index.project.currentWork}`);
@@ -260,7 +293,10 @@ class MemoryIndex {
    * 打印启动摘要
    */
   printBootSummary() {
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.log: console.log(this.getBootSummary());
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   // ─────────────────────────────────────────
@@ -309,13 +345,19 @@ class MemoryIndex {
   addFeedback(type, content, meta = {}) {
     // 探索失败不自动存储为教训
     if (meta.source === 'exploration') {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.error: console.error('[MemoryIndex] 探索失败不存储为教训');
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return;
     }
 
     // 必须有明确的来源或用户确认
     if (!meta.source && !meta.userConfirmed) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.error: console.error('[MemoryIndex] 反馈需要明确来源（source=user/exploration）或用户确认（userConfirmed=true）');
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return;
     }
 
@@ -462,7 +504,11 @@ class MemoryIndex {
   healthCheck() {
     return {
       status: this.index ? 'healthy' : 'degraded',
+<<<<<<< HEAD
       version: this.index?.meta?.version,
+=======
+      // version 已移除，避免与项目版本混淆
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       lastBoot: this.index?.meta?.lastBoot,
       currentSession: this.index?.context?.currentSession,
       pausedTasks: this.index?.context?.pausedTasks?.length || 0,

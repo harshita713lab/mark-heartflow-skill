@@ -1,6 +1,10 @@
 # NVIDIA SkillSpector Audit Fix — Round 2 (2026-06-24)
 
+<<<<<<< HEAD
 **Source**: `/Users/apple/Pictures/mark.txt` (NVIDIA SkillSpector audit report, 26 findings)
+=======
+**Source**: `audit report` (NVIDIA SkillSpector audit report, 26 findings)
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 **Scope**: Description-Behavior Mismatch + Context-Inappropriate Capability fixes across 6 files
 
 ## Findings Fixed

@@ -124,7 +124,11 @@ heartflow status
 ```bash
 node -e '
 const path = require("path");
+<<<<<<< HEAD
 const hfDir = path.join(process.env.HOME, ".hermes/skills/ai/mark-heartflow-skill");
+=======
+const hfDir = path.join(process.env.HOME, ".hermes/skills/heartflow");
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const { HeartFlow } = require(path.join(hfDir, "src/core/heartflow.js"));
 const engine = new HeartFlow({ dataDir: path.join(hfDir, "data"), silent: true });
 engine.start();

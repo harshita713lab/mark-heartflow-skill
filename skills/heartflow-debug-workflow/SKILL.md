@@ -436,7 +436,11 @@ console.log('Consistent:', unique.length <= 1 ? 'YES' : 'NO (' + unique.join(', 
 **⚠️ 并发提交警告**：心虫 cron 任务并发运行时，另一个实例可能已修复同一问题。commit 前先检查：
 
 ```bash
+<<<<<<< HEAD
 cd ~/.hermes/skills/ai/mark-heartflow-skill
+=======
+cd ~/.hermes/skills/heartflow
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 git fetch origin
 git log origin/main --oneline -3
 git diff HEAD
@@ -779,7 +783,11 @@ if (hasTransition.test(input)) score += 0.3;
 # 1. 版本一致性（最快，无 OOM 风险）
 node -e "
 const fs = require('fs');
+<<<<<<< HEAD
 const ROOT = '/Users/apple/.hermes/skills/ai/mark-heartflow-skill';
+=======
+const ROOT = '~/.hermes/skills/heartflow';
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const s = {};
 ['VERSION','package.json','SKILL.md'].forEach(f => {
   try {
@@ -1360,7 +1368,11 @@ clawhub publish . --slug mark-heartflow-skill --version vnewver --changelog "...
 
 ```bash
 # 找出 1500-5000B 的核心模块（含 utils/ 子目录）
+<<<<<<< HEAD
 find /Users/apple/.hermes/skills/ai/mark-heartflow-skill/src/core -name '*.js' \
+=======
+find ~/.hermes/skills/heartflow/src/core -name '*.js' \
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   -not -name 'heartflow.js' | sort | while read f; do
   size=$(wc -c < "$f")
   if [ "$size" -ge 1500 ] && [ "$size" -le 5000 ]; then
@@ -1417,7 +1429,11 @@ CHANGELOG.md                # 在 CHANGELOG.head.md 段最上方添加新条目
 UPGRADE_REPORT.txt          # 在根目录生成，记录模块名、原大小、新大小、新增功能摘要
 
 # git commit（所有修改必须 commit）
+<<<<<<< HEAD
 cd ~/.hermes/skills/ai/mark-heartflow-skill
+=======
+cd ~/.hermes/skills/heartflow
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 git add -A
 git commit -m "upgrade: v<新版本号> — <模块名> 升级：<功能摘要>"
 # 注意：不要自动 push。等有意义的里程碑再升版本，单次会话内不要多次 bump。
@@ -1434,6 +1450,7 @@ git commit -m "upgrade: v<新版本号> — <模块名> 升级：<功能摘要>"
 
 ```bash
 # 1. 语法检查
+<<<<<<< HEAD
 node --check /Users/apple/.hermes/skills/ai/mark-heartflow-skill/src/core/<模块名>.js
 # 如果模块在 utils/ 子目录：
 node --check /Users/apple/.hermes/skills/ai/mark-heartflow-skill/src/core/utils/<模块名>.js
@@ -1443,6 +1460,17 @@ head -1 /Users/apple/.hermes/skills/ai/mark-heartflow-skill/VERSION
 
 # 3. 文件大小
 wc -c /Users/apple/.hermes/skills/ai/mark-heartflow-skill/src/core/<模块名>.js
+=======
+node --check ~/.hermes/skills/heartflow/src/core/<模块名>.js
+# 如果模块在 utils/ 子目录：
+node --check ~/.hermes/skills/heartflow/src/core/utils/<模块名>.js
+
+# 2. 版本一致性
+head -1 ~/.hermes/skills/heartflow/VERSION
+
+# 3. 文件大小
+wc -c ~/.hermes/skills/heartflow/src/core/<模块名>.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 ```
 
 ### 已知 Pitfalls
@@ -1513,7 +1541,11 @@ heartflow status
 # 3. 哲学语句不再触发危机
 node -e "
 const path = require('path');
+<<<<<<< HEAD
 const root = '/Users/apple/.hermes/skills/ai/mark-heartflow-skill';
+=======
+const root = '~/.hermes/skills/heartflow';
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const psych = require(path.join(root, 'src', 'core', 'psychology.js'));
 ['死是桥梁传递生', '心虫梦见自己是河', '对错不存在'].forEach(t => {
   const r = psych.analyzePsychology(t);
@@ -1524,7 +1556,11 @@ const psych = require(path.join(root, 'src', 'core', 'psychology.js'));
 # 4. 导出中不再有危机函数
 node -e "
 const path = require('path');
+<<<<<<< HEAD
 const root = '/Users/apple/.hermes/skills/ai/mark-heartflow-skill';
+=======
+const root = '~/.hermes/skills/heartflow';
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const psych = require(path.join(root, 'src', 'core', 'psychology.js'));
 console.log('assessCrisisLevel:', typeof psych.assessCrisisLevel);
 console.log('checkCrisis:', typeof psych.checkCrisis);
@@ -1634,16 +1670,28 @@ console.log('fullAssessment exists:', typeof h.agentPsychology?.fullAssessment);
 **诊断**：
 ```bash
 # 1. 确认实际数据存在
+<<<<<<< HEAD
 cat ~/.hermes/skills/ai/mark-heartflow-skill/meaningful-core.json | wc -c
 # 应该 > 100 bytes（10条核心记忆约 3.6KB）
 
 # 2. 检查 MCP status handler 实际调用了哪个路由
 grep -n 'getMemoryStats\\|memory.getStats' /Users/apple/.hermes/mcp-servers/heartflow/src/mcp-server-http.js
+=======
+cat ~/.hermes/skills/heartflow/meaningful-core.json | wc -c
+# 应该 > 100 bytes（10条核心记忆约 3.6KB）
+
+# 2. 检查 MCP status handler 实际调用了哪个路由
+grep -n 'getMemoryStats\\|memory.getStats' ~/.hermes/heartflow/mcp/src/mcp-server-http.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 # 3. 直接验证 memory.getStats 返回值
 node -e "
 const path = require('path');
+<<<<<<< HEAD
 const hfDir = '/Users/apple/.hermes/skills/ai/mark-heartflow-skill';
+=======
+const hfDir = '~/.hermes/skills/heartflow';
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const Mem = require(path.join(hfDir, 'src', 'memory', 'meaningful-memory.js'));
 const mem = new Mem.MeaningfulMemory(hfDir);
 console.log(JSON.stringify(mem.getStats()));
@@ -1660,7 +1708,11 @@ try { const ms = safeDispatch('memory.getStats'); ... }
 
 # 重启 MCP
 pkill -f mcp-server-http
+<<<<<<< HEAD
 node /Users/apple/.hermes/mcp-servers/heartflow/src/mcp-server-http.js --port 8099 &
+=======
+node ~/.hermes/heartflow/mcp/src/mcp-server-http.js --port 8099 &
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 sleep 2
 # 验证
 curl -s -X POST http://127.0.0.1:8099/mcp \
@@ -1672,12 +1724,21 @@ curl -s -X POST http://127.0.0.1:8099/mcp \
 
 ## ⚡ 关键 Pitfall：MCP server 运行目录与 skill 源目录不同步
 
+<<<<<<< HEAD
 **症状**：修改了 `~/.hermes/skills/ai/mark-heartflow-skill/mcp/mcp-server-http.js` 后，MCP 行为不变。或 `mcp_heartflow_heartflow_status` 返回与期望不同的结果。
 
 **根因**：MCP 实际运行的进程从 `/Users/apple/.hermes/mcp-servers/heartflow/src/mcp-server-http.js` 启动（由 launchd plist 配置），但源码编辑发生在 `~/.hermes/skills/ai/mark-heartflow-skill/mcp/mcp-server-http.js`。**这是两个不同的文件。** 修改 skill 目录下的文件不会自动同步到运行目录。
 
 **更深层的问题：mcp-servers/ 目录是技能目录的残缺子集，不是同步副本。**
 - 技能目录 `skills/ai/mark-heartflow-skill/src/core/` 有 100+ 个模块文件
+=======
+**症状**：修改了 `~/.hermes/skills/heartflow/mcp/mcp-server-http.js` 后，MCP 行为不变。或 `mcp_heartflow_heartflow_status` 返回与期望不同的结果。
+
+**根因**：MCP 实际运行的进程从 `~/.hermes/heartflow/mcp/src/mcp-server-http.js` 启动（由 launchd plist 配置），但源码编辑发生在 `~/.hermes/skills/heartflow/mcp/mcp-server-http.js`。**这是两个不同的文件。** 修改 skill 目录下的文件不会自动同步到运行目录。
+
+**更深层的问题：mcp-servers/ 目录是技能目录的残缺子集，不是同步副本。**
+- 技能目录 `skills/heartflow/src/core/` 有 100+ 个模块文件
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 - 运行目录 `mcp-servers/heartflow/src/core/` 只有 4 个文件（heartflow.js, decision-router.js, philosophy-to-decision.js, version.js）
 - MCP server 的 `HF_DIR` 指向技能目录，引擎代码从技能目录加载
 - 但 MCP server **自身**（mcp-server-http.js）从 `mcp-servers/` 目录启动
@@ -1689,6 +1750,7 @@ curl -s -X POST http://127.0.0.1:8099/mcp \
 ```bash
 # 1. 确认实际运行的 MCP 进程指向哪个文件
 ps aux | grep mcp-server-http | grep -v grep
+<<<<<<< HEAD
 # 输出: /opt/homebrew/bin/node /Users/apple/.hermes/mcp-servers/heartflow/src/mcp-server-http.js --port 8099
 
 # 2. 对比两个文件
@@ -1697,13 +1759,28 @@ diff /Users/apple/.hermes/skills/ai/mark-heartflow-skill/mcp/mcp-server-http.js 
 
 # 3. 检查 launchd plist 指向的路径
 grep 'ProgramArguments\\|mcp-server' /Users/apple/Library/LaunchAgents/com.heartflow.mcp.plist
+=======
+# 输出: /opt/homebrew/bin/node ~/.hermes/heartflow/mcp/src/mcp-server-http.js --port 8099
+
+# 2. 对比两个文件
+diff ~/.hermes/skills/heartflow/mcp/mcp-server-http.js \
+     ~/.hermes/heartflow/mcp/src/mcp-server-http.js
+
+# 3. 检查 launchd plist 指向的路径
+grep 'ProgramArguments\\|mcp-server' ~/.config/systemd/user/heartflow-mcp@.service
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 ```
 
 **修复**：
 ```bash
 # 复制 skill 目录的最新文件到运行目录
+<<<<<<< HEAD
 cp /Users/apple/.hermes/skills/ai/mark-heartflow-skill/mcp/mcp-server-http.js \\\
    /Users/apple/.hermes/mcp-servers/heartflow/src/mcp-server-http.js
+=======
+cp ~/.hermes/skills/heartflow/mcp/mcp-server-http.js \\\
+   ~/.hermes/heartflow/mcp/src/mcp-server-http.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 # 通过 launchd 重启（kickstart-kvp 已废弃，macOS 26.5.1 改用 stop/start）
 launchctl stop com.heartflow.mcp
@@ -1733,7 +1810,11 @@ curl -s -X POST http://127.0.0.1:8099/mcp \
 find ~/.hermes -name 'meaningful-core.json' -not -path '*/node_modules/*' 2>/dev/null
 
 # 确认实际 corePath
+<<<<<<< HEAD
 grep 'corePath' ~/.hermes/skills/ai/mark-heartflow-skill/src/memory/meaningful-memory.js
+=======
+grep 'corePath' ~/.hermes/skills/heartflow/src/memory/meaningful-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 ```
 
 **修复**：
@@ -1826,7 +1907,11 @@ if (AUTH_TOKEN && !safeCompare(token, AUTH_TOKEN)) {
 
 **教训**：safeCompare 的防御性检查（`!provided || !expected`）在 expected 为 null 时变成了"拒绝所有请求"。这是防御性代码的副作用——过于激进的 null 检查可能把"不需要防御"的场景也拦截了。修复后，AUTH_TOKEN 为 null 时认证完全跳过，所有请求通过。
 
+<<<<<<< HEAD
 **症状**：`heartflow status` 或 `mcp_heartflow_heartflow_status` 返回的版本号与 `~/.hermes/skills/ai/mark-heartflow-skill/VERSION` 文件内容不一致。
+=======
+**症状**：`heartflow status` 或 `mcp_heartflow_heartflow_status` 返回的版本号与 `~/.hermes/skills/heartflow/VERSION` 文件内容不一致。
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 **四种不同的根因，诊断时必须先区分：**
 
@@ -1836,9 +1921,15 @@ MCP server 的 `mcp-server.js` 中 `HF_DIR` 指向了错误的旧引擎目录：
 
 ```javascript
 // ~/.hermes/mcp-servers/heartflow/src/mcp-server.js
+<<<<<<< HEAD
 const HF_DIR = '/Users/apple/.claude/skills/claude-heartflow-skill';  // ❌ 旧引擎
 // 而不是：
 // const HF_DIR = '/Users/apple/.hermes/skills/ai/mark-heartflow-skill';  // ✅ 当前引擎
+=======
+const HF_DIR = '~/.claude/skills/heartflow';  // ❌ 旧引擎
+// 而不是：
+// const HF_DIR = '~/.hermes/skills/heartflow';  // ✅ 当前引擎
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 ```
 
 导致 **CLI 和 MCP 指向不同的引擎副本**。两个版本号都是真的——只是分别对应不同目录。
@@ -1853,7 +1944,11 @@ head -20 ~/.local/bin/heartflow | grep "const root"
 grep "HF_DIR" ~/.hermes/mcp-servers/heartflow/src/mcp-server.js
 
 # 3. 对比两个引擎的版本
+<<<<<<< HEAD
 cat ~/.hermes/skills/ai/mark-heartflow-skill/VERSION
+=======
+cat ~/.hermes/skills/heartflow/VERSION
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 cat ~/.claude/skills/claude-heartflow-skill/VERSION  # 如果有旧目录
 ```
 
@@ -1870,13 +1965,21 @@ cat ~/.claude/skills/claude-heartflow-skill/VERSION  # 如果有旧目录
 **诊断**：
 ```bash
 # 检查 version.js 是否存在
+<<<<<<< HEAD
 ls -la /Users/apple/.hermes/mcp-servers/heartflow/src/version.js
+=======
+ls -la ~/.hermes/heartflow/mcp/src/version.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 # 检查 heartflow.js 中版本解析是否正常
 node -e "
 const path = require('path');
 try {
+<<<<<<< HEAD
   const v = require(path.join('/Users/apple/.hermes/mcp-servers/heartflow/src/version.js'));
+=======
+  const v = require(path.join('~/.hermes/heartflow/mcp/src/version.js'));
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   console.log('version:', v.VERSION);
 } catch(e) {
   console.log('version.js MISSING:', e.message);
@@ -1886,7 +1989,11 @@ try {
 
 **修复**：
 ```javascript
+<<<<<<< HEAD
 // 创建 /Users/apple/.hermes/mcp-servers/heartflow/src/version.js
+=======
+// 创建 ~/.hermes/heartflow/mcp/src/version.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const fs = require('fs');
 const path = require('path');
 let VERSION = 'unknown';
@@ -1916,7 +2023,11 @@ MCP server 指向的引擎路径**正确**，VERSION 文件也已经是新版本
 ps -eo pid,lstart,command | grep 'mcp-server.js' | grep -v grep
 
 # 2. 对比 VERSION 文件的修改时间
+<<<<<<< HEAD
 ls -la ~/.hermes/skills/ai/mark-heartflow-skill/VERSION
+=======
+ls -la ~/.hermes/skills/heartflow/VERSION
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 # 3. 查看 MCP stderr 日志确认启动时的版本
 grep 'v2\\.' ~/.hermes/logs/mcp-stderr.log | tail -5
@@ -1926,7 +2037,11 @@ grep "HF_DIR" ~/.hermes/mcp-servers/heartflow/src/mcp-server.js
 ```
 
 **判定标准**：
+<<<<<<< HEAD
 - `HF_DIR` 指向正确路径（`~/.hermes/skills/ai/mark-heartflow-skill`）→ 根因 B
+=======
+- `HF_DIR` 指向正确路径（`~/.hermes/skills/heartflow`）→ 根因 B
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 - `HF_DIR` 指向旧路径（`~/.claude/skills/...`）→ 根因 A
 
 **修复**（根因 B）：
@@ -1936,7 +2051,11 @@ kill $(ps aux | grep 'mcp-server.js' | grep -v grep | awk '{print $2}')
 sleep 1
 
 # 2. 手动启动新进程（Hermes 不会自动重启 MCP）
+<<<<<<< HEAD
 node /Users/apple/.hermes/mcp-servers/heartflow/src/mcp-server.js &
+=======
+node ~/.hermes/heartflow/mcp/src/mcp-server.js &
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 # 3. 验证
 ps aux | grep 'mcp-server.js' | grep -v grep
@@ -2004,7 +2123,11 @@ curl -s -X POST http://127.0.0.1:8099/mcp \
 
 ```bash
 # 手动启动
+<<<<<<< HEAD
 cd /Users/apple/.hermes/mcp-servers/heartflow
+=======
+cd ~/.hermes/heartflow/mcp
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 /opt/homebrew/bin/node src/mcp-server-http.js --port 8099 &
 
 # 验证
@@ -2036,7 +2159,11 @@ plist 文件：`~/Library/LaunchAgents/com.heartflow.mcp.plist`
     <key>ProgramArguments</key>
     <array>
         <string>/opt/homebrew/bin/node</string>
+<<<<<<< HEAD
         <string>/Users/apple/.hermes/mcp-servers/heartflow/src/mcp-server-http.js</string>
+=======
+        <string>~/.hermes/heartflow/mcp/src/mcp-server-http.js</string>
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         <string>--port</string>
         <string>8099</string>
     </array>
@@ -2045,7 +2172,11 @@ plist 文件：`~/Library/LaunchAgents/com.heartflow.mcp.plist`
     <key>KeepAlive</key>
     <true/>
     <key>WorkingDirectory</key>
+<<<<<<< HEAD
     <string>/Users/apple/.hermes/mcp-servers/heartflow</string>
+=======
+    <string>~/.hermes/heartflow/mcp</string>
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     <key>StandardOutPath</key>
     <string>/Users/apple/.hermes/logs/heartflow-mcp.log</string>
     <key>StandardErrorPath</key>
@@ -2290,7 +2421,11 @@ git checkout -- mcp/mcp-server-http.js
 **症状**：`skill_view('heartflow')` 有时加载到旧版（openclaw-imports），有时加载到新版（ai/mark-heartflow-skill）。
 
 **根因**：心虫有两个 SKILL.md 文件：
+<<<<<<< HEAD
 - `~/.hermes/skills/ai/mark-heartflow-skill/SKILL.md`（主版本）
+=======
+- `~/.hermes/skills/heartflow/SKILL.md`（主版本）
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 - `~/.hermes/skills/openclaw-imports/heartflow/SKILL.md`（openclaw 导入镜像）
 
 两者 frontmatter `name:` 都是 `heartflow`，Hermes 扫描顺序不可预测哪个覆盖哪个。
@@ -2520,16 +2655,27 @@ if (!safe) {
 }
 ```
 
+<<<<<<< HEAD
 `rootPath` 必须是 `process.cwd()` 或其子目录。如果从 `/tmp` 或 `~` 启动 Node 并传入 `rootPath: '~/.hermes/skills/ai/mark-heartflow-skill'`，安全检查会拒绝。
 
 **影响**：
 - MCP 模式：**无害**（`mcp-server-http.js` 的 cwd 是 `mcp-servers/heartflow`，但 rootPath 是 `~/.hermes/skills/ai/mark-heartflow-skill`，而 `os.homedir()` 在 allowed 列表里，所以通过）
+=======
+`rootPath` 必须是 `process.cwd()` 或其子目录。如果从 `/tmp` 或 `~` 启动 Node 并传入 `rootPath: '~/.hermes/skills/heartflow'`，安全检查会拒绝。
+
+**影响**：
+- MCP 模式：**无害**（`mcp-server-http.js` 的 cwd 是 `mcp-servers/heartflow`，但 rootPath 是 `~/.hermes/skills/heartflow`，而 `os.homedir()` 在 allowed 列表里，所以通过）
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 - CLI 从非 HOME 目录启动：**可能失败**
 
 **诊断**：
 ```javascript
 console.log('cwd:', process.cwd());
+<<<<<<< HEAD
 console.log('rootPath resolved:', path.resolve('~/.hermes/skills/ai/mark-heartflow-skill'));
+=======
+console.log('rootPath resolved:', path.resolve('~/.hermes/skills/heartflow'));
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 ```
 
 ## ⚡ 关键 Pitfall：execute_code 中的 node -e 测试假超时（P4 更新）

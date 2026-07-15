@@ -8,9 +8,25 @@
  * 
  * 本地优先设计：SQLite + 向量扩展 (sqlite-vec)
  * 支持 narrativeQuery 图遍历查询
+<<<<<<< HEAD
  */
 
 const fs = require('fs');
+=======
+ * 
+ * ⚠️ KNOWN LIMITATION (P0-2): TrialityMemory stores data in-memory with JSON
+ * export to triality-memory-export.json. Encryption is NOT applied here because:
+ * 1. sqlite-vec vector operations require in-memory data access patterns
+ * 2. Encrypting individual vectors would break cosine similarity computation
+ * 3. Full-db encryption (SQLCipher) would require native addon dependencies
+ * 
+ * For encrypted persistent storage, use MemoryBank (memory-bank.js) or
+ * LongTermMemory (long-term-memory.js) which now support AES-256-GCM encryption.
+ * See P0-2 audit fix in memory-encrypt.js for details.
+ */
+
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const path = require('path');
 const crypto = require('crypto');
 
@@ -52,7 +68,14 @@ class TrialityMemory {
       fs.mkdirSync(dataDir, { recursive: true });
     }
     this.initializeSchema();
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error('[TrialityMemory] 三维经验大脑初始化完成');
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    // [PROD] 生产环境移除 console.error: console.error('[TrialityMemory] 三维经验大脑初始化完成');
+========
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   initializeSchema() {
@@ -87,11 +110,22 @@ class TrialityMemory {
             }
           }
           this.stats.totalMemories = this.memories.length;
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
           // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 从 ${exportPath} 恢复 ${data.memories.length} 条记忆`);
         }
       } catch (e) {
         // [PROD] 生产环境移除 console.warn: console.warn('[TrialityMemory] 恢复记忆失败:', e.message);
       }
+<<<<<<< HEAD
+=======
+========
+        }
+      } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
   }
 
@@ -111,9 +145,19 @@ class TrialityMemory {
         exportedAt: new Date().toISOString()
       };
       fs.writeFileSync(exportPath, JSON.stringify(data, null, 2));
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.warn: console.warn('[TrialityMemory] 自动保存失败:', e.message);
     }
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    } catch (e) {
+      // [PROD] 生产环境移除 console.warn: console.warn('[TrialityMemory] 自动保存失败:', e.message);
+    }
+========
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   store(memory) {
@@ -150,14 +194,26 @@ class TrialityMemory {
     }
     
     this.stats.totalMemories = this.memories.length;
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 记忆存储: ${id} (${this.memories.length} total)`);
     this._autoSave(); // 自动持久化
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 记忆存储: ${id} (${this.memories.length} total)`);
+    this._autoSave(); // 自动持久化
+========
+    this._autoSave(); // 自动持久化
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
     // 每新增 5 条记忆重建一次因果图
     if (this.causalEngine && this.memories.length % 5 === 0) {
       this._rebuildCausalGraph();
     }
 
+<<<<<<< HEAD
+=======
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return id;
   }
 
@@ -210,9 +266,13 @@ class TrialityMemory {
     try {
       this.causalEngine.buildGraph(this.memories);
       this.stats.causalGraphBuilt = true;
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.warn: console.warn('[TrialityMemory] 因果图构建失败:', e.message);
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   /**
@@ -394,7 +454,14 @@ class TrialityMemory {
     }
 
     narrative.sort((a, b) => a.timestamp - b.timestamp);
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 叙事查询: ${narrative.length} 个记忆节点`);
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 叙事查询: ${narrative.length} 个记忆节点`);
+========
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return narrative;
   }
 
@@ -429,7 +496,14 @@ class TrialityMemory {
     const allowedDir = path.join(path.dirname(this.dbPath || __dirname), '..', '..', '..', 'data');
     const resolvedPath = path.resolve(filePath);
     if (!resolvedPath.startsWith(path.resolve(allowedDir))) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 安全拦截: 不允许导出到 ${resolvedPath}（必须在 data 目录内）`);
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+      // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 安全拦截: 不允许导出到 ${resolvedPath}（必须在 data 目录内）`);
+========
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return { success: false, error: 'path_not_allowed' };
     }
     const data = {
@@ -438,7 +512,14 @@ class TrialityMemory {
       exportedAt: new Date().toISOString()
     };
     fs.writeFileSync(resolvedPath, JSON.stringify(data, null, 2));
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 导出到: ${resolvedPath}`);
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 导出到: ${resolvedPath}`);
+========
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return { success: true, count: this.memories.length };
   }
 
@@ -447,11 +528,23 @@ class TrialityMemory {
     const allowedDir = path.resolve(path.join(path.dirname(this.dbPath || __dirname), '..', '..', '..', 'data'));
     const resolvedPath = path.resolve(filePath);
     if (!resolvedPath.startsWith(allowedDir)) {
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 安全拦截: 不允许从 ${resolvedPath} 导入（必须在 data 目录内）`);
       return { success: false, error: 'path_not_allowed' };
     }
     if (!fs.existsSync(resolvedPath)) {
       // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 文件不存在: ${resolvedPath}`);
+<<<<<<< HEAD
+=======
+========
+      return { success: false, error: 'path_not_allowed' };
+    }
+    if (!fs.existsSync(resolvedPath)) {
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return { success: false, error: 'file_not_found' };
     }
     const data = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
@@ -460,7 +553,14 @@ class TrialityMemory {
         this.store(mem);
       }
     }
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 从 ${filePath} 导入`);
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 从 ${filePath} 导入`);
+========
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return { success: true, count: data.memories?.length || 0 };
   }
 
@@ -470,7 +570,14 @@ class TrialityMemory {
     this.memories = this.memories.filter(m => m.timestamp > cutoff);
     this.stats.lastCleanup = new Date().toISOString();
     const removed = before - this.memories.length;
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 清理: 移除 ${removed} 条旧记忆`);
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 清理: 移除 ${removed} 条旧记忆`);
+========
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return { removed, remaining: this.memories.length };
   }
 
@@ -532,7 +639,14 @@ class TrialityMemory {
       if (mem) mem.compressed = true;
     }
 
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 遗忘曲线清理: 删除 ${toDelete.length} 条, 压缩 ${toCompress.length} 条`);
+=======
+<<<<<<<< HEAD:src/src/memory/triality-memory.js
+    // [PROD] 生产环境移除 console.error: console.error(`[TrialityMemory] 遗忘曲线清理: 删除 ${toDelete.length} 条, 压缩 ${toCompress.length} 条`);
+========
+>>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321:src/memory/triality-memory.js
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return { deleted: toDelete.length, compressed: toCompress.length };
   }
 

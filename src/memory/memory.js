@@ -21,7 +21,11 @@
  * 5. 原子写入：temp + rename 防数据损坏
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const path = require('path');
 const crypto = require('crypto');
 
@@ -141,6 +145,7 @@ function _getOrCreateAesKey() {
     return _aesKey;
   }
 
+<<<<<<< HEAD
   // ⚠️ 安全修复：密钥持久化存储，非真正的一次性session key
   // 风险：如果 .aes-key 文件被复制，攻击者可解密所有 LEARNED 层记忆
   // 正确做法：使用 ENV_AES_KEY（HEARTFLOW_AES_KEY=xxx）而非文件存储
@@ -177,6 +182,12 @@ function _getOrCreateAesKey() {
       // ignore
     }
   }
+=======
+  // [SECURITY FIX H-3] No file fallback — if env var is not set, generate in-memory only
+  // This key is NOT persistent across restarts; use HEARTFLOW_AES_KEY for persistence
+  console.warn('[memory] HEARTFLOW_AES_KEY not set — AES key is ephemeral (not persistent across restarts). Set HEARTFLOW_AES_KEY env var for persistent encryption.');
+  _aesKey = crypto.randomBytes(AES_CONFIG.keyLength);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   return _aesKey;
 }
 
@@ -246,6 +257,40 @@ function atomicWriteJson(filePath, data) {
 // ─── 持久化 ─────────────────────────────────────────────────────────────────
 
 function _loadAll() {
+<<<<<<< HEAD
+=======
+  // [M-4] Key existence check: if .enc files exist from previous sessions
+  // but the encryption key (HEARTFLOW_AES_KEY) is not set, refuse to start
+  // because a new ephemeral key cannot decrypt previously-encrypted data.
+  if (fs.existsSync(LEARNED_PATH)) {
+    const encKey = process.env.HEARTFLOW_AES_KEY;
+    if (!encKey) {
+      // Check file permissions on the .enc file
+      try {
+        const stat = fs.statSync(LEARNED_PATH);
+        const mode = stat.mode;
+        // Reject if world-readable (others have read permission)
+        if (mode & 0o004) {
+          throw new Error(
+            `[Memory] FATAL: Encrypted memory file ${LEARNED_PATH} is world-readable (mode: ${(mode & 0o777).toString(8)}). ` +
+            'Encrypted data must not be readable by other users. Fix with: chmod 600 ' + LEARNED_PATH
+          );
+        }
+      } catch (permErr) {
+        if (permErr.message.startsWith('[Memory] FATAL')) throw permErr;
+      }
+
+      // Key not set — refuse to start with encrypted data from a previous session
+      throw new Error(
+        '[Memory] FATAL: Encrypted learned memory file exists (' + LEARNED_PATH + ') ' +
+        'but HEARTFLOW_AES_KEY is not set. A new ephemeral key cannot decrypt data ' +
+        'from a previous session. Either set HEARTFLOW_AES_KEY to the key used during ' +
+        'encryption, or delete the .enc file to start fresh.'
+      );
+    }
+  }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   // CORE: plain JSON
   if (fs.existsSync(CORE_PATH)) {
     try {

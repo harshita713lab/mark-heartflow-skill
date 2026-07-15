@@ -16,6 +16,26 @@
  * @version 1.0.0
  */
 
+<<<<<<< HEAD
+=======
+const MAX_TRACKER_SIZE = 300;
+
+/**
+ * 带容量保护的 Map.set — 超出容量时淘汰最早插入的条目（LRU）
+ * @param {Map} map - 目标 Map
+ * @param {*} key - 键
+ * @param {*} value - 值
+ * @param {number} maxSize - 最大容量
+ */
+function _boundedSet(map, key, value, maxSize) {
+  if (map.size >= maxSize && !map.has(key)) {
+    const firstKey = map.keys().next().value;
+    map.delete(firstKey);
+  }
+  map.set(key, value);
+}
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 class WorldModel {
   constructor(options = {}) {
     this._config = {
@@ -55,7 +75,11 @@ class WorldModel {
       outcomes: existing ? [...existing.outcomes] : [],
     };
 
+<<<<<<< HEAD
     this._states.set(key, entry);
+=======
+    _boundedSet(this._states, key, entry, MAX_TRACKER_SIZE);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     this._stats.totalStates = this._states.size;
     return entry;
   }
@@ -86,7 +110,11 @@ class WorldModel {
         counts: {},
         createdAt: Date.now(),
       };
+<<<<<<< HEAD
       this._transitions.set(transitionKey, transition);
+=======
+      _boundedSet(this._transitions, transitionKey, transition, MAX_TRACKER_SIZE);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
 
     transition.outcomes.push({

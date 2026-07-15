@@ -52,8 +52,23 @@ function resolveHFDir() {
     dir = parent;
   }
 
+<<<<<<< HEAD
   // 3. Fallback 到 ~/.hermes/skills/heartflow/
   return path.join(process.env.HOME, '.hermes', 'skills', 'heartflow');
+=======
+  // 3. Fallback：尝试多个可能的安装位置
+  const fallbacks = [
+    path.join(process.env.HOME, '.hermes', 'skills', 'mark-heartflow-skill'),
+    path.join(process.env.HOME, '.hermes', 'skills', 'heartflow'),
+    path.join(process.env.HOME, 'Documents', 'ClaudeCode'),
+  ];
+  for (const fb of fallbacks) {
+    const candidate = path.join(fb, 'src', 'core', 'heartflow.js');
+    if (fs.existsSync(candidate)) return fb;
+  }
+  // 最后兜底：返回 mark-heartflow-skill 路径（即使不存在，调用方会报错）
+  return path.join(process.env.HOME, '.hermes', 'skills', 'mark-heartflow-skill');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 }
 const HF_DIR = resolveHFDir();
 const HEARTFLOW_PATH = path.join(HF_DIR, 'src', 'core', 'heartflow.js');
@@ -79,6 +94,11 @@ function getVersion() {
 const AUTH_TOKEN = process.env.HEARTFLOW_MCP_TOKEN || null;
 if (!AUTH_TOKEN) {
   console.error('[MCP] SECURITY: HEARTFLOW_MCP_TOKEN is not set. MCP server requires authentication.');
+<<<<<<< HEAD
+=======
+  console.error('[MCP] Refusing to start without authentication token.');
+  process.exit(1);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 }
 
 // ─── 时间安全的 token 比较（防止 timing attack）───
@@ -103,6 +123,14 @@ const RATE_LIMIT_WINDOW = 60000; // 1 分钟窗口
 const RATE_LIMIT_MAX = 100; // 每分钟最多 100 请求
 const _rateMap = new Map(); // IP → { count, windowStart }
 
+<<<<<<< HEAD
+=======
+// [AUDIT-FIX] Token 维度速率限制：防止 token 暴力破解
+const TOKEN_RATE_LIMIT_WINDOW = 60000; // 1 分钟窗口
+const TOKEN_RATE_LIMIT_MAX = 30; // 每个 token 每分钟最多 30 请求
+const _tokenRateMap = new Map(); // tokenHash → { count, windowStart }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 function checkRateLimit(ip) {
   const now = Date.now();
   let entry = _rateMap.get(ip);
@@ -114,12 +142,33 @@ function checkRateLimit(ip) {
   return entry.count <= RATE_LIMIT_MAX;
 }
 
+<<<<<<< HEAD
+=======
+// [AUDIT-FIX] Token 维度速率检查
+function checkTokenRateLimit(tokenHash) {
+  const now = Date.now();
+  let entry = _tokenRateMap.get(tokenHash);
+  if (!entry || now - entry.windowStart > TOKEN_RATE_LIMIT_WINDOW) {
+    entry = { count: 0, windowStart: now };
+    _tokenRateMap.set(tokenHash, entry);
+  }
+  entry.count++;
+  return entry.count <= TOKEN_RATE_LIMIT_MAX;
+}
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 // 定期清理过期的速率限制记录
 setInterval(() => {
   const now = Date.now();
   for (const [ip, entry] of _rateMap) {
     if (now - entry.windowStart > RATE_LIMIT_WINDOW * 2) _rateMap.delete(ip);
   }
+<<<<<<< HEAD
+=======
+  for (const [hash, entry] of _tokenRateMap) {
+    if (now - entry.windowStart > TOKEN_RATE_LIMIT_WINDOW * 2) _tokenRateMap.delete(hash);
+  }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 }, 120000);
 
 // 从 VERSION 文件读取版本
@@ -243,6 +292,44 @@ const TOOLS = [
     description: '升级统计：返回智能升级引擎的统计信息，包括升级次数、关键词分布、平均质量等。',
     inputSchema: { type: 'object', properties: {} }
   },
+<<<<<<< HEAD
+=======
+  // v3.2.0 — Benchmark 基准测试
+  {
+    name: 'heartflow_benchmark_run',
+    description: '运行 benchmark 测试套件。加载 JSONL 数据包，对每条数据运行 HeartFlow think()，对比 expected_output 计算准确率。支持数学推理、逻辑推理、指令遵循、SQL、工具调用等类别。失败案例自动推入自愈 RL。',
+    inputSchema: { type: 'object', properties: {
+      dataDir: { type: 'string', description: '数据包目录路径（可选，默认 data/benchmark/）' },
+      categories: { type: 'array', items: { type: 'string' }, description: '要测试的类别（可选，默认全部）' },
+      threshold: { type: 'number', description: '通过阈值 0-1（可选，默认 0.5）' },
+      pushFailures: { type: 'boolean', description: '是否将失败推入自愈 RL（默认 true）' }
+    } }
+  },
+  {
+    name: 'heartflow_benchmark_import_failures',
+    description: '导入失败案例 JSONL 到自愈 RL。读取 failure_cases 文件，每条推入 experience-collector 和 self-healing reflect()，丰富 RL 训练数据。',
+    inputSchema: { type: 'object', properties: {
+      filePath: { type: 'string', description: '失败案例 JSONL 文件路径' },
+      autoRetrain: { type: 'boolean', description: '导入后自动触发反思循环（默认 false）' }
+    }, required: ['filePath'] }
+  },
+  {
+    name: 'heartflow_benchmark_status',
+    description: '查看 benchmark 数据包状态：列出已加载的数据包、记录数、类别分布。',
+    inputSchema: { type: 'object', properties: {
+      dataDir: { type: 'string', description: '数据包目录路径（可选，默认 data/benchmark/）' }
+    } }
+  },
+  // ── P0-T0-2: knowledge/persona/evolution 脚手架 ──
+  { name: 'heartflow_knowledge_query', description: '知识图谱查询', inputSchema: { type: 'object', properties: { query: { type: 'object' } } } },
+  { name: 'heartflow_knowledge_add_node', description: '知识图谱添加节点', inputSchema: { type: 'object', properties: { name: { type: 'string' }, description: { type: 'string' }, type: { type: 'string' }, importance: { type: 'number' } }, required: ['name'] } },
+  { name: 'heartflow_knowledge_stats', description: '知识图谱统计', inputSchema: { type: 'object', properties: {} } },
+  { name: 'heartflow_persona_bridge_identity', description: '桥身份声明', inputSchema: { type: 'object', properties: {} } },
+  { name: 'heartflow_persona_value_aligner', description: '价值对齐检查', inputSchema: { type: 'object', properties: { userInput: { type: 'string' }, bridgeIdentity: { type: 'object' } }, required: ['userInput'] } },
+  { name: 'heartflow_persona_stance_detector', description: '立场检测', inputSchema: { type: 'object', properties: { input: { type: 'string' } }, required: ['input'] } },
+  { name: 'heartflow_evolution_stats', description: '演化统计信息', inputSchema: { type: 'object', properties: {} } },
+  { name: 'heartflow_evolution_evolve', description: '演化一次', inputSchema: { type: 'object', properties: { input: { type: 'string' }, context: { type: 'object' } }, required: ['input'] } },
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 ];
 
 // ═══════════════════════════════════════════════
@@ -894,6 +981,212 @@ function handleUpgradeStats(args) {
   }
 }
 
+<<<<<<< HEAD
+=======
+// ── P0-T0-2: knowledge/persona/evolution 脚手架 ──
+function handleKnowledgeQuery(args) {
+  const query = (args && args.query) || args || {};
+  if (!query || typeof query !== 'object') throw new Error('query 参数格式错误');
+  try {
+    return safeDispatch('knowledgeGraph.query', query);
+  } catch (_) {
+    if (typeof heartflow.knowledge?.query === 'function') return heartflow.knowledge.query(query);
+    if (typeof heartflow.searchKnowledge === 'function') return heartflow.searchKnowledge(args.query || '');
+    return { error: true, message: 'knowledge query 不可用' };
+  }
+}
+function handleKnowledgeAddNode(args) {
+  const payload = args || {};
+  if (!payload.name) throw new Error('name 是必填参数');
+  try {
+    return safeDispatch('knowledgeGraph.addNode', payload);
+  } catch (_) {
+    if (typeof heartflow.knowledge?.addNode === 'function') return heartflow.knowledge.addNode(payload);
+    if (typeof heartflow.addKnowledge === 'function') {
+      try { return heartflow.addKnowledge(payload.name, payload.description, payload.type, payload.importance); } catch (_) { /* fallback */ }
+    }
+    if (typeof heartflow.knowledge?.addEdge === 'function') {
+      heartflow.knowledge.addEdge(payload.name, 'type', payload.type || 'concept', payload.importance || 0.5);
+      heartflow.knowledge.addEdge(payload.name, 'description', payload.description || '', payload.importance || 0.5);
+      return { name: payload.name, type: payload.type || 'concept', description: payload.description || '', importance: payload.importance || 0.5 };
+    }
+    return { error: true, message: 'knowledge addNode 不可用' };
+  }
+}
+function handleKnowledgeStats(args) {
+  try {
+    return safeDispatch('knowledgeGraph.getStats', args);
+  } catch (_) {
+    if (typeof heartflow.knowledge?.getStats === 'function') return heartflow.knowledge.getStats();
+    if (typeof heartflow.getKnowledgeStats === 'function') return heartflow.getKnowledgeStats();
+    return { error: true, message: 'knowledge stats 不可用' };
+  }
+}
+function handlePersonaBridgeIdentity(args) {
+  try {
+    const identity = safeDispatch('personaCore.bridgeIdentity', args);
+    if (identity && typeof identity === 'object' && !identity.error) return identity;
+  } catch (_) {}
+
+  const personaInfo = {};
+  try {
+    if (typeof heartflow.persona?.getCurrent === 'function') personaInfo.current = heartflow.persona.getCurrent();
+  } catch (_) {}
+  try {
+    if (typeof heartflow.personaCore?.bridgeIdentity === 'function') personaInfo.declaration = heartflow.personaCore.bridgeIdentity();
+  } catch (_) {}
+
+  if (Object.keys(personaInfo).length > 0) {
+    return { bridgeType: 'heartflow', persona: personaInfo, note: 'real persona bridge identity' };
+  }
+  return { bridgeType: 'unknown', note: 'persona bridge identity placeholder' };
+}
+function handlePersonaValueAligner(args) {
+  const payload = args || {};
+  if (!payload.userInput) throw new Error('userInput 是必填参数');
+  let identity = null;
+  try { identity = safeDispatch('personaCore.bridgeIdentity'); } catch (_) { identity = null; }
+  try {
+    return safeDispatch('personaCore.valueAligner', { userInput: payload.userInput, bridgeIdentity: identity });
+  } catch (_) {
+    if (typeof heartflow.personaCore?.valueAligner === 'function') {
+      return heartflow.personaCore.valueAligner({ userInput: payload.userInput, bridgeIdentity: identity });
+    }
+    const current = typeof heartflow.persona?.getCurrent === 'function' ? heartflow.persona.getCurrent() : null;
+    return { aligned: !!current, currentPersona: current, input: payload.userInput, note: 'persona-consistency-checker via persona engine' };
+  }
+}
+function handlePersonaStanceDetector(args) {
+  const payload = args || {};
+  if (!payload.input) throw new Error('input 是必填参数');
+  try {
+    const stance = safeDispatch('personaCore.stanceDetector', payload.input, payload);
+    if (stance && typeof stance === 'object' && !stance.error) return stance;
+  } catch (_) {}
+  try {
+    if (typeof heartflow.personaCore?.stanceDetector === 'function') return heartflow.personaCore.stanceDetector(payload.input);
+  } catch (_) {}
+  const current = typeof heartflow.persona?.getCurrent === 'function' ? heartflow.persona.getCurrent() : 'unknown';
+  return { persona: current, stance: 'neutral', input: payload.input, note: 'derived from current persona' };
+}
+function handleEvolutionStats(args) {
+  try {
+    return safeDispatch('evolution.getStats', args);
+  } catch (_) {
+    if (typeof heartflow.evolution?.getStats === 'function') return heartflow.evolution.getStats();
+    if (typeof heartflow.getEvolutionStats === 'function') return heartflow.getEvolutionStats();
+    return { error: true, message: 'evolution stats 不可用' };
+  }
+}
+function handleEvolutionEvolve(args) {
+  const payload = args || {};
+  if (!payload.input) throw new Error('input 是必填参数');
+  try {
+    return safeDispatch('evolution.evolve', payload.input, payload.context || {});
+  } catch (_) {
+    if (typeof heartflow.evolution?.evolve === 'function') return heartflow.evolution.evolve(payload.input, payload.context || {});
+    if (typeof heartflow.evolveImprove === 'function') return heartflow.evolveImprove(payload.input, payload.context || {});
+    return { error: true, message: 'evolution evolve 不可用', input: payload.input, context: payload.context };
+  }
+}
+
+// ═══════════════════════════════════════════════
+// v3.2.0 — Benchmark 基准测试
+// ═══════════════════════════════════════════════
+
+function handleBenchmarkStatus(args, sessionId) {
+  const dataDir = confinePath((args && args.dataDir) || path.join(HF_DIR, 'data', 'benchmark'), HF_DIR);
+  try {
+    if (!fs.existsSync(dataDir)) {
+      return { dataDir, exists: false, packs: [], message: 'Benchmark 数据目录不存在，请放入 JSONL 数据包后重试' };
+    }
+    const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.jsonl'));
+    const packs = files.map(f => {
+      const fp = path.join(dataDir, f);
+      const content = fs.readFileSync(fp, 'utf-8');
+      const count = content.trim().split('\n').filter(l => l.trim()).length;
+      return { file: f, records: count, size: content.length };
+    });
+    return { dataDir, exists: true, packs, totalPacks: packs.length, totalRecords: packs.reduce((s, p) => s + p.records, 0) };
+  } catch (e) {
+    return { error: e.message, timestamp: Date.now() };
+  }
+}
+
+async function handleBenchmarkRun(args, sessionId) {
+  const dataDir = confinePath((args && args.dataDir) || path.join(HF_DIR, 'data', 'benchmark'), HF_DIR);
+  const categories = (args && args.categories) || null;
+  const threshold = (args && args.threshold) || 0.5;
+  const pushFailures = args && args.pushFailures !== false;
+
+  try {
+    const { BenchmarkRunner } = require(path.join(HF_DIR, 'src', 'benchmark', 'benchmark-runner.js'));
+    const hf = sessionId ? getOrCreateInstance(sessionId) : heartflow;
+    if (!hf) return { error: '引擎未启动', timestamp: Date.now() };
+
+    const runner = new BenchmarkRunner(hf);
+
+    // 加载数据包
+    if (fs.existsSync(dataDir)) {
+      runner.loadDirectory(dataDir);
+    }
+
+    // 过滤类别
+    let packs = Object.keys(runner.packs);
+    if (categories && Array.isArray(categories)) {
+      packs = packs.filter(p => categories.includes(p));
+      // 只保留选中的类别
+      const filtered = {};
+      for (const p of packs) filtered[p] = runner.packs[p];
+      runner.packs = filtered;
+    }
+
+    if (packs.length === 0) {
+      return { error: '未找到数据包', dataDir, message: '请将 JSONL 数据包放入 data/benchmark/ 目录', timestamp: Date.now() };
+    }
+
+    // 运行测试
+    const summary = await runner.runAll({ threshold, pushFailures });
+
+    // 推入 RL
+    const flushResult = await runner.flushFailuresToRL();
+
+    return {
+      summary,
+      flushToRL: flushResult,
+      dataDir,
+      categories: packs,
+      timestamp: Date.now()
+    };
+  } catch (e) {
+    return { error: e.message, timestamp: Date.now() };
+  }
+}
+
+async function handleBenchmarkImportFailures(args, sessionId) {
+  const filePath = args && args.filePath ? confinePath(args.filePath, path.join(HF_DIR, 'data')) : null;
+  const autoRetrain = args && args.autoRetrain || false;
+
+  if (!filePath) return { error: 'filePath 是必填参数', timestamp: Date.now() };
+
+  try {
+    const { FailureCaseImporter } = require(path.join(HF_DIR, 'src', 'benchmark', 'failure-importer.js'));
+    const hf = sessionId ? getOrCreateInstance(sessionId) : heartflow;
+    if (!hf) return { error: '引擎未启动', timestamp: Date.now() };
+
+    const importer = new FailureCaseImporter(hf);
+    const report = await importer.importFromFile(filePath, { autoRetrain });
+
+    return {
+      report,
+      timestamp: Date.now()
+    };
+  } catch (e) {
+    return { error: e.message, timestamp: Date.now() };
+  }
+}
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const HANDLERS = {
   heartflow_think: handleThink,
   heartflow_think_fast: handleThinkFast,
@@ -919,6 +1212,22 @@ const HANDLERS = {
   // v3.1.0 — 新增工具
   heartflow_module_health: handleModuleHealth,
   heartflow_upgrade_stats: handleUpgradeStats,
+<<<<<<< HEAD
+=======
+  // v3.2.0 — Benchmark
+  heartflow_benchmark_run: handleBenchmarkRun,
+  heartflow_benchmark_import_failures: handleBenchmarkImportFailures,
+  heartflow_benchmark_status: handleBenchmarkStatus,
+  // P0-T0-2 — knowledge/persona/evolution
+  heartflow_knowledge_query: handleKnowledgeQuery,
+  heartflow_knowledge_add_node: handleKnowledgeAddNode,
+  heartflow_knowledge_stats: handleKnowledgeStats,
+  heartflow_persona_bridge_identity: handlePersonaBridgeIdentity,
+  heartflow_persona_value_aligner: handlePersonaValueAligner,
+  heartflow_persona_stance_detector: handlePersonaStanceDetector,
+  heartflow_evolution_stats: handleEvolutionStats,
+  heartflow_evolution_evolve: handleEvolutionEvolve,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 };
 
 // ═══════════════════════════════════════════════
@@ -939,7 +1248,11 @@ function makeError(id, code, message, data) {
 // 请求处理
 // ═══════════════════════════════════════════════
 
+<<<<<<< HEAD
 async function handleRequest(request) {
+=======
+async function handleRequest(request, sessionId) {
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   const { id, method, params = {} } = request;
 
   switch (method) {
@@ -958,7 +1271,16 @@ async function handleRequest(request) {
       if (!handler) throw { code: -32601, message: `Method not found: ${name}` };
 
       let result;
+<<<<<<< HEAD
       result = handler(args);
+=======
+      // 兼容两种签名：handler(args) 和 handler(args, sessionId)
+      try {
+        result = handler(args, sessionId);
+      } catch (_) {
+        result = handler(args);
+      }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       if (result && typeof result.then === 'function') result = await result;
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], isError: false };
     }
@@ -998,6 +1320,16 @@ const server = http.createServer((req, res) => {
   // SkillSpector fix: 移除 URL query parameter token 认证（token 在 URL 中会通过日志/referrer 泄露）
   
   if (!safeCompare(token, AUTH_TOKEN)) {
+<<<<<<< HEAD
+=======
+    // [AUDIT-FIX] Token 维度速率限制：记录失败尝试
+    const tokenHash = token ? crypto.createHash('sha256').update(token).digest('hex').slice(0, 16) : 'none';
+    if (!checkTokenRateLimit(tokenHash)) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Too Many Auth Failures', retryAfter: 60 }));
+      return;
+    }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     res.writeHead(401, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Unauthorized', message: 'Invalid or missing Bearer token in Authorization header' }));
     return;
@@ -1006,10 +1338,18 @@ const server = http.createServer((req, res) => {
   // ─── CORS Preflight ───
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
+<<<<<<< HEAD
       'Access-Control-Allow-Origin': 'http://localhost',  // SkillSpector fix: 限制 CORS 来源,
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400'
+=======
+      'Access-Control-Allow-Origin': 'http://localhost',  // [AUDIT-FIX] 限制 CORS 来源为本地
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+      'Access-Control-Allow-Credentials': 'false'  // [AUDIT-FIX] 禁止跨域携带凭据
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     });
     res.end();
     return;
@@ -1029,7 +1369,11 @@ const server = http.createServer((req, res) => {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+<<<<<<< HEAD
       'Access-Control-Allow-Origin': 'http://localhost',  // SkillSpector fix: 限制 CORS 来源,
+=======
+      'Access-Control-Allow-Origin': 'http://localhost',  // [AUDIT-FIX] 限制 CORS 来源
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       'X-Accel-Buffering': 'no'
     });
 
@@ -1100,7 +1444,11 @@ const server = http.createServer((req, res) => {
           res.end(makeError(null, -32600, 'Invalid Request: expected JSON-RPC object'));
           return;
         }
+<<<<<<< HEAD
         const result = await handleRequest(request);
+=======
+        const result = await handleRequest(request, sessionId);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         if (result !== null) {
           // 找到对应的 SSE 客户端，通过 SSE 发送结果
           if (sessionId && sseClients.has(sessionId)) {

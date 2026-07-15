@@ -11,13 +11,50 @@
  */
 
 const https = require('https');
+<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+=======
+const fs = require('../utils/safe-fs');
+const path = require('path');
+const crypto = require('crypto');
+const { safeFetch } = require('../core/fetch-safe.js');
+
+// === 缓存 Map 最大容量 ===
+const MAX_CACHE_SIZE = 200;
+
+/**
+ * 带容量保护的 Map.set — 超出容量时淘汰最早插入的条目（LRU）
+ * @param {Map} map - 目标 Map
+ * @param {*} key - 键
+ * @param {*} value - 值
+ * @param {number} maxSize - 最大容量
+ */
+function _boundedSet(map, key, value, maxSize) {
+  if (map.size >= maxSize && !map.has(key)) {
+    const firstKey = map.keys().next().value;
+    map.delete(firstKey);
+  }
+  map.set(key, value);
+}
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 class SmartUpgradeEngine {
   constructor(rootPath) {
     this.rootPath = rootPath;
+<<<<<<< HEAD
+=======
+    // [SECURITY] 默认禁用联网升级，需显式 opt-in
+    this.enabled = process.env.HEARTFLOW_SMART_UPGRADE_ENABLED === 'true';
+    // [D-003] Repo whitelist — empty = deny all. Only repos in this list may be sourced.
+    this.repoWhitelist = new Set(
+      (process.env.HEARTFLOW_UPGRADE_WHITELIST || '')
+        .split(',').map(s => s.trim()).filter(Boolean)
+    );
+    // [D-003] SHA-256 integrity check — stored hashes for verified repos
+    this.integrityHashes = new Map(); // repo name → expected SHA-256
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     // 确保路径正确：从项目根目录计算
     this.upgradesDir = path.isAbsolute(rootPath)
       ? path.join(rootPath, 'data/upgrades')
@@ -162,6 +199,7 @@ class SmartUpgradeEngine {
   }
 
   /**
+<<<<<<< HEAD
    * 搜索GitHub
    */
   searchGitHub(query) {
@@ -200,11 +238,47 @@ class SmartUpgradeEngine {
     
     if (available.length === 0) return null;
     
+=======
+   * 搜索GitHub - [P-005] routed through safeFetch
+   */
+  async searchGitHub(query) {
+    if (!this.enabled) {
+      return Promise.reject(new Error('SmartUpgradeEngine is disabled. Set HEARTFLOW_SMART_UPGRADE_ENABLED=true to enable.'));
+    }
+    const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&per_page=10`;
+    try {
+      const res = await safeFetch(url, {
+        headers: { 'User-Agent': 'heartflow-upgrader' },
+        timeout: 30000,
+      });
+      const result = await res.json();
+      return result.items || [];
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /**
+   * 选择最佳仓库（去重 + [D-003] whitelist enforcement）
+   */
+  selectBestRepo(repos, manifest) {
+    const processedRepos = new Set(manifest.processed.map(p => p.repo));
+
+    // [D-003] Whitelist gate — empty whitelist = deny all
+    const whitelisted = repos.filter(r => this.repoWhitelist.size === 0 ? false : this.repoWhitelist.has(r.full_name));
+
+    // 过滤已处理的仓库
+    const available = whitelisted.filter(r => !processedRepos.has(r.full_name));
+
+    if (available.length === 0) return null;
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     // 按星标数排序，选择最热门的
     return available.sort((a, b) => b.stargazers_count - a.stargazers_count)[0];
   }
 
   /**
+<<<<<<< HEAD
    * 获取仓库代码
    */
   async fetchRepoCode(repo) {
@@ -233,6 +307,40 @@ class SmartUpgradeEngine {
         resolve(null);
       });
     });
+=======
+   * 获取仓库代码 - [P-005] routed through safeFetch, [D-003] SHA-256 integrity
+   */
+  async fetchRepoCode(repo) {
+    if (!this.enabled) {
+      return Promise.reject(new Error('SmartUpgradeEngine is disabled. Set HEARTFLOW_SMART_UPGRADE_ENABLED=true to enable.'));
+    }
+    // 获取默认分支的README
+    const url = `https://api.github.com/repos/${repo.full_name}/readme`;
+    try {
+      const res = await safeFetch(url, {
+        headers: { 'User-Agent': 'heartflow-upgrader' },
+        timeout: 60000,
+      });
+      const result = await res.json();
+      if (!result || !result.content) return null;
+      // 解码base64内容
+      const content = Buffer.from(result.content, 'base64').toString('utf-8');
+
+      // [D-003] SHA-256 integrity check — verify against stored hash if available
+      const expectedHash = this.integrityHashes.get(repo.full_name);
+      if (expectedHash) {
+        const sha256 = crypto.createHash('sha256').update(content).digest('hex');
+        if (sha256 !== expectedHash) {
+          this.log(`Integrity check FAILED for ${repo.full_name}: expected ${expectedHash}, got ${sha256}`);
+          return null;
+        }
+      }
+
+      return content;
+    } catch (e) {
+      return null;
+    }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   /**
@@ -398,7 +506,11 @@ module.exports = { ${className} };
       createdAt: Date.now()
     };
     
+<<<<<<< HEAD
     this._cache.set(id, node);
+=======
+    _boundedSet(this._cache, id, node, MAX_CACHE_SIZE);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return node;
   }
 
@@ -595,7 +707,10 @@ module.exports = { ${className} };
    */
   log(msg) {
     const ts = new Date().toISOString();
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.error: console.error(`[${ts}] ${msg}`);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     
     try {
       let logs = [];
@@ -632,11 +747,17 @@ if (require.main === module) {
   const engine = new SmartUpgradeEngine(__dirname);
   engine.runUpgrade()
     .then(result => {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.log: console.log('升级结果:', result);
       return;
     })
     .catch(err => {
       // [PROD] 生产环境移除 console.error: console.error('升级失败:', err);
+=======
+      return;
+    })
+    .catch(err => {
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return;
     });
 }

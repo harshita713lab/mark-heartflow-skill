@@ -14,7 +14,11 @@
 
 const crypto = require('crypto');
 const path = require('path');
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. generateId - 内容寻址ID生成器
@@ -349,7 +353,10 @@ class KeyedLock {
       return await fn();
     } catch (error) {
       if (this._debug) {
+<<<<<<< HEAD
         // [PROD] 生产环境移除 console.error: console.error(`[KeyedLock] Error in lock ${key}:`, error.message);
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       }
       throw error;
     }
@@ -442,4 +449,28 @@ module.exports = {
   
   // 原子写入
   atomicWriteJson,
+<<<<<<< HEAD
+=======
+  
+  // [AUDIT-FIX M-01] 安全日志：生产环境自动脱敏
+  safeLog: (() => {
+    const isProd = (process.env.NODE_ENV || '').startsWith('prod');
+    const sensitiveKeys = /api[_-]?key|secret|token|password|credential|auth/i;
+    return function safeLog(level, msg, data) {
+      if (isProd && level === 'debug') return; // 生产环境跳过 debug
+      if (data && typeof data === 'object') {
+        const safe = {};
+        for (const [k, v] of Object.entries(data)) {
+          safe[k] = sensitiveKeys.test(k) ? '[REDACTED]' : v;
+        }
+        data = safe;
+      }
+      const ts = new Date().toISOString();
+      const prefix = `[HeartFlow ${ts}]`;
+      if (level === 'error') console.error(prefix, msg, data || '');
+      else if (level === 'warn') console.warn(prefix, msg, data || '');
+      else console.log(prefix, msg, data || '');
+    };
+  })(),
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 };

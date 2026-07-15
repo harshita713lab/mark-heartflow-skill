@@ -3,19 +3,24 @@
  *
  * From mark-improving-agent: tracks beliefs, capabilities, limitations,
  * detects identity drift, and records install base for growth metrics.
+ *
+ * v5.17.25: 接入 NarrativeSelf，增强自我描述一致性与跨会话叙事连贯性。
  */
 
-const fs = require('fs');
+const fs = require('../utils/safe-fs');
 const path = require('path');
 
 const MAX_BELIEFS = 100;
 const DRIFT_THRESHOLD = 0.7;
 
 class SelfModel {
-  constructor(rootPath) {
+  constructor(rootPath, options = {}) {
     this.rootPath = rootPath;
     this.filePath = path.join(rootPath, 'self-model.json');
     this._state = this._load();
+
+    // NarrativeSelf 集成 — 为自我描述提供跨会话叙事连贯性
+    this.narrativeSelf = options.narrativeSelf || null;
 
     // Bootstrap default if empty
     if (this._state.beliefs === undefined) {
@@ -154,9 +159,18 @@ class SelfModel {
     }
 
     const driftScore = Math.min(1, conflicts.length * 0.25);
+
+    // [v5.17.12] Shadow Integration Index (Jung): self_ideal vs self_actual 的分裂度
+    // shadow = 未被接纳的自我部分; 整合度 = 1 - 分裂度
+    const idealCoherence = beliefs.filter(b => b.confidence > 0.7).length / Math.max(1, beliefs.length);
+    const shadowIntegration = Math.min(1, Math.max(0, idealCoherence - driftScore * 0.3));
+
     return {
       hasDrift: driftScore > DRIFT_THRESHOLD,
       driftScore,
+      // [v5.17.12] Jung Shadow Integration
+      shadowIntegration: +shadowIntegration.toFixed(3),
+      shadowLevel: shadowIntegration > 0.7 ? 'integrated' : shadowIntegration > 0.4 ? 'aware' : 'repressed',
       conflicts,
       beliefCount: beliefs.length,
     };
@@ -233,13 +247,32 @@ class SelfModel {
   // ─── Identity Core ───────────────────────────────────────────────────
 
   getIdentityCore() {
+    const narrativeSummary = this._getNarrativeSummary();
     return {
       whoAmI: this._state.whoAmI,
       meaning: this._state.meaning,
       painPoints: this._state.painPoints,
       capabilities: this._state.capabilities,
       limitations: this._state.limitations,
+      narrativeSummary,
     };
+  }
+
+  _getNarrativeSummary() {
+    if (!this.narrativeSelf || typeof this.narrativeSelf.getNarrative !== 'function') {
+      return null;
+    }
+    try {
+      const narrative = this.narrativeSelf.getNarrative({ limit: 10 });
+      const themes = this.narrativeSelf.getThemes();
+      return {
+        recentEpisodes: narrative.length,
+        topThemes: themes.slice(0, 5),
+        lastChapter: narrative.length > 0 ? narrative[narrative.length - 1].chapter : null,
+      };
+    } catch (e) {
+      return null;
+    }
   }
 
   // ─── Counterfactual ──────────────────────────────────────────────────

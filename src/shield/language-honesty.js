@@ -21,6 +21,11 @@
  *   - 反问: 10次 → 目标 < 3
  */
 
+<<<<<<< HEAD
+=======
+const { escapeRegExp } = require('../utils/safe-regex.js');
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const ABSOLUTE_WORDS = ['就是', '肯定', '本质', '最底层', '绝对', '肯定是', '本质上', '绝对是'];
 const QUESTION_WORDS = ['你觉得', '你认为', '我这样说对吗', '哪个对', '怎么想'];
 
@@ -79,7 +84,11 @@ function checkCertainty(text) {
   let absoluteCount = 0;
   for (let i = 0; i < ABSOLUTE_WORDS.length; i++) {
     const word = ABSOLUTE_WORDS[i];
+<<<<<<< HEAD
     const match = text.match(new RegExp(word, 'g'));
+=======
+    const match = text.match(new RegExp(escapeRegExp(word), 'g'));
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     if (match) absoluteCount += match.length;
   }
 
@@ -100,7 +109,11 @@ function checkQuestions(text) {
   let count = 0;
   for (let i = 0; i < QUESTION_WORDS.length; i++) {
     const word = QUESTION_WORDS[i];
+<<<<<<< HEAD
     const match = text.match(new RegExp(word, 'g'));
+=======
+    const match = text.match(new RegExp(escapeRegExp(word), 'g'));
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     if (match) count += match.length;
   }
 
@@ -341,6 +354,17 @@ function validateOutput(text) {
     passed: certainty.level !== 'over' && questions.level !== 'over'
       && turing.level !== 'over' && pzombie.level !== 'over',
     suggestion: fixRecommendations.length > 0 ? fixRecommendations[0].message : null,
+<<<<<<< HEAD
+=======
+    // [v5.17.18 M4] 偏差自审计 — 检测输出中的认知偏差
+    biasAudit: {
+      overconfidenceDetected: certainty.level === 'over',
+      falseDichotomy: /\b(要么|或者|非此即彼|either.*or|all.*or.*nothing)\b/i.test(text),
+      anchoringEffect: /\b(通常|一般|always|never|绝对|永远)\b/i.test(text) && certainty.level !== 'low',
+      confirmationBias: questions.level === 'over' && oscillation.hasOscillation,
+      triggeredRestraint: certainty.level === 'over' || questions.level === 'over',
+    },
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   };
 }
 

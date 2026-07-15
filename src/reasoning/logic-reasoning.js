@@ -403,7 +403,14 @@ const PROBLEM_FRAMEWORK_MAP = {
 class LogicReasoning {
   constructor(options = {}) {
     this.version = '5.5.0';
+<<<<<<< HEAD
     this._history = [];
+=======
+    // [HIGH FIX] 环形缓冲区（避免 shift() O(n) 开销）
+    this._history = new Array(this._maxHistory);
+    this._historyHead = 0;  // 写入位置
+    this._historySize = 0;  // 当前大小
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     this._maxHistory = options.maxHistory || 50;
   }
 
@@ -444,7 +451,11 @@ class LogicReasoning {
       ts: Date.now(),
     });
     if (this._history.length > this._maxHistory) {
+<<<<<<< HEAD
       this._history.shift();
+=======
+      // [HIGH FIX] 环形缓冲区无需 shift()（超过容量时自动覆盖）
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     }
 
     return result;
@@ -756,7 +767,12 @@ class LogicReasoning {
    * 5. 答案选择（选择题）
    * 从选择题文本中提取选项，结合推理类型+谬误+前提分析选择正确答案
    */
+<<<<<<< HEAD
   selectAnswer(input, context = {}) {
+=======
+  async selectAnswer(input, context) {
+    if (context === undefined) context = {};
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     // 如果没有传入推理类型上下文，自动检测
     if (!context.reasoningType || Object.keys(context.reasoningType).length === 0) {
       context.reasoningType = this.detectType(input);
@@ -935,7 +951,11 @@ class LogicReasoning {
     // 当所有规则都打0分时，调LLM推理
     if (best.score < 0.1 && this._llmFallback) {
       try {
+<<<<<<< HEAD
         const llmResult = this._llmFallback(input, options, reasoningType);
+=======
+        const llmResult = await this._llmFallback(input, options, reasoningType);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         if (llmResult && llmResult.selectedAnswer) {
           const llmLetter = llmResult.selectedAnswer;
           // 找到LLM选的选项，给它加分
@@ -967,6 +987,16 @@ class LogicReasoning {
       reason: finalBest.score > 0 ? finalBest.reasons.join('; ') : '无法确定',
       allScores: scored.map(s => ({ letter: s.letter, score: Math.round(s.score * 100) / 100 })),
       llmFallback: best.score < 0.1 ? true : false,
+<<<<<<< HEAD
+=======
+      // [v5.17.16 M2] 主动推理EFE原型 — 探索(epistemic) vs 利用(pragmatic)
+      // EFE = 实用价值(偏好满足) + 认知价值(信息增益)
+      activeInference: {
+        exploitation: +(confidence / 100).toFixed(3),
+        exploration: +(1 - confidence / 100 - (scored.length > 1 ? scored[1].score / 100 : 0)).toFixed(3),
+        needsMoreEvidence: confidence < 50 || (scored.length > 1 && scored[1].score > finalBest.score * 0.7),
+      },
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     };
   }
 
@@ -1012,8 +1042,13 @@ class LogicReasoning {
     const fracMatch = optionText.match(/(\d+)\/(\d+)/);
     if (!fracMatch) return 0;
 
+<<<<<<< HEAD
     const num = parseInt(fracMatch[1]);
     const den = parseInt(fracMatch[2]);
+=======
+    const num = parseInt(fracMatch[1], 10);
+    const den = parseInt(fracMatch[2], 10);
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     if (den === 0) return 0;
 
     const value = num / den;
@@ -1509,10 +1544,17 @@ class LogicReasoning {
 
   /**
    * LLM兜底推理 — 当规则引擎打0分时，调LLM做选择题推理
+<<<<<<< HEAD
    * 使用 child_process + curl 实现同步调用（腾讯云API）
    */
   _llmFallback(input, options, reasoningType) {
     // 构建简洁的英文 prompt（腾讯云API支持英文更好）
+=======
+   * [P-005] routed through safeFetch — SSRF protection + timeout
+   */
+  async _llmFallback(input, options, reasoningType) {
+    // 构建简洁的英文 prompt
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     const qPart = input.replace(/\n[A-D][.、．)）].+/g, '').trim();
     const optLines = input.match(/\n[A-D][.、．)）].+/g);
     const optText = optLines ? optLines.join('\n') : '';
@@ -1527,6 +1569,7 @@ class LogicReasoning {
     });
 
     try {
+<<<<<<< HEAD
       // 用Python子进程调用curl，避免shell转义问题
       const _cp = require('child_process');
       const fs = require('fs');
@@ -1573,6 +1616,64 @@ print(content.strip())
     return null;
   }
 
+=======
+      const { safeFetch } = require('../core/fetch-safe.js');
+
+      // [SECURITY FIX H-2] API key from env only — no file fallback
+      const apiKey = process.env.HEARTFLOW_API_KEY;
+      if (!apiKey) {
+        throw new Error('[logic-reasoning] HEARTFLOW_API_KEY environment variable is required');
+      }
+
+      // [v5.17.9 H1] host白名单 — 仅允许腾讯Copilot域名，防止env注入外泄API Key
+      const ALLOWED_API_HOSTS = ['copilot.tencent.com', 'api.tencent.com'];
+      const apiBase = process.env.TENCENT_API_BASE;
+      let finalBase = 'https://copilot.tencent.com/v2';
+      if (apiBase) {
+        try {
+          const parsed = new URL(apiBase);
+          if (!ALLOWED_API_HOSTS.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
+            throw new Error(`TENCENT_API_BASE host "${parsed.hostname}" not in allowed list`);
+          }
+          finalBase = apiBase;
+        } catch(e) {
+          console.warn('[logic-reasoning] TENCENT_API_BASE rejected:', e.message, '— using default');
+        }
+      }
+      const url = finalBase + '/chat/completions';
+
+      const res = await safeFetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey,
+        },
+        body,
+        timeout: 15000,
+      });
+
+      const raw = await res.text();
+      let content = '';
+      for (const line of raw.split('\n')) {
+        if (line.startsWith('data: ')) {
+          const d = line.slice(6);
+          if (d.trim() === '[DONE]') break;
+          try {
+            const obj = JSON.parse(d);
+            const delta = obj?.choices?.[0]?.delta?.content || '';
+            content += delta;
+          } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+        }
+      }
+      const letter = content.trim().toUpperCase().match(/[A-D]/);
+      return letter ? { selectedAnswer: letter[0] } : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   getStats() {
     return {
       version: this.version,
@@ -1588,4 +1689,9 @@ print(content.strip())
   }
 }
 
+<<<<<<< HEAD
 module.exports = { LogicReasoning };
+=======
+// [v5.17.9 H1] P0已修复: host白名单校验 + safeFetch SSRF防护
+module.exports = { LogicReasoning };
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321

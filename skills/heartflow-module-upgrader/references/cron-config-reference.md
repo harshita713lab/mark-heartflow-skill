@@ -20,7 +20,11 @@
 | provider | custom |
 | base_url | `https://by.53hk.cn/v1` |
 | schedule | **every 2h** |
+<<<<<<< HEAD
 | workdir | `~/.hermes/skills/ai/mark-heartflow-skill` |
+=======
+| workdir | `~/.hermes/skills/heartflow` |
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 | toolsets | `["terminal","file","skills","web"]` |
 | skills | `["web-search-plus"]` |
 | deliver | weixin |
@@ -35,7 +39,11 @@
 | model | deepseek-v4-flash |
 | provider | custom:https://by.53hk.cn/v1 |
 | schedule | **every 12h** |
+<<<<<<< HEAD
 | workdir | `~/.hermes/skills/ai/mark-heartflow-skill` |
+=======
+| workdir | `~/.hermes/skills/heartflow` |
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 | toolsets | `["terminal","file","skills"]` |
 | deliver | local（存本地，不推微信） |
 

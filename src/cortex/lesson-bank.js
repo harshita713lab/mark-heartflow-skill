@@ -13,7 +13,11 @@
  * 该文件不含敏感凭据，但包含用户交互模式和学习历史。
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const path = require('path');
 
 const LESSON_FILE = path.join(__dirname, '../../data/lesson-bank.json');
@@ -76,6 +80,7 @@ const lessonBank = {
       }
     } catch (e) {
       // JSON损坏尝试WAL恢复
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.warn: console.warn('[lesson-bank] 数据文件损坏，尝试WAL恢复');
       const recovered = this._recoverFromWAL();
       if (recovered) {
@@ -83,6 +88,12 @@ const lessonBank = {
         this.save();
       } else {
         // [PROD] 生产环境移除 console.warn: console.warn('[lesson-bank] WAL恢复失败，从空库开始');
+=======
+      const recovered = this._recoverFromWAL();
+      if (recovered) {
+        this.save();
+      } else {
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         this.lessons = [];
       }
     }
@@ -707,7 +718,19 @@ const lessonBank = {
       score: Math.max(0, score),
       recommendation: issues.length === 0 ? '输出通过检查' : `发现${issues.length}个问题，建议审查`,
     };
+<<<<<<< HEAD
   }
+=======
+  },
+
+  // [v5.9.18 FIX B-1] 补充 getTopLessons 实现 — 委托给 getConfidenceWeighted
+  getTopLessons(limit = 5) {
+    if (typeof this.getConfidenceWeighted === 'function') {
+      return this.getConfidenceWeighted(limit);
+    }
+    return this._lessons ? this._lessons.slice(-limit).reverse() : [];
+  },
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 };
 
 lessonBank.load();

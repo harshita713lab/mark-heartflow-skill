@@ -4,6 +4,10 @@
  * v2.0.57 - 新增：LRU缓存、作者搜索、概念过滤、结果评分排序、批量验证、引用网络、分页、统计追踪
  */
 const https = require('https');
+<<<<<<< HEAD
+=======
+const { safeFetch } = require('../core/fetch-safe.js');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 
 // 简单的 LRU 缓存实现
 class LRUCache {
@@ -83,6 +87,7 @@ const openalexClient = {
   },
 
   /**
+<<<<<<< HEAD
    * HTTP GET 封装 - 带超时和重试
    */
   _get(url, retryCount = 0) {
@@ -161,6 +166,49 @@ const openalexClient = {
         }
       });
     });
+=======
+   * HTTP GET 封装 - [P-005] routed through safeFetch, with retry
+   */
+  async _get(url, retryCount = 0) {
+    this._stats.totalRequests++;
+    try {
+      const res = await safeFetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'HeartFlow/1.0',
+        },
+        timeout: this.TIMEOUT,
+      });
+
+      if (res.status === 429 || res.status >= 500) {
+        if (retryCount < this.MAX_RETRIES) {
+          const delay = this.BASE_DELAY * Math.pow(2, retryCount);
+          await new Promise(r => setTimeout(r, delay));
+          return this._get(url, retryCount + 1);
+        }
+        this._stats.failedRequests++;
+        throw new Error(`达到最大重试次数 (${this.MAX_RETRIES}), 最后状态码: ${res.status}`);
+      }
+
+      if (res.status !== 200) {
+        this._stats.failedRequests++;
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      this._stats.successfulRequests++;
+      return data;
+    } catch (e) {
+      if (retryCount < this.MAX_RETRIES &&
+          (e.code === 'ECONNRESET' || e.code === 'ETIMEDOUT' || e.code === 'ENOTFOUND' || e.name === 'AbortError')) {
+        const delay = this.BASE_DELAY * Math.pow(2, retryCount);
+        await new Promise(r => setTimeout(r, delay));
+        return this._get(url, retryCount + 1);
+      }
+      this._stats.failedRequests++;
+      throw e;
+    }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   },
 
   /**

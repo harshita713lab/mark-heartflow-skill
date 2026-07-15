@@ -54,10 +54,49 @@ class PhenomenologyEngine {
         isEmpty: clarity < 0.2,
         isObscured: clarity < 0.5
       },
+<<<<<<< HEAD
+=======
+      // v5.9.9: IIT 整合信息论 —— 当 context 提供信息分割时量化意识整合度
+      integratedInformation: (context && Array.isArray(context.partitions))
+        ? this.measurePhi(aboutnessStrength, context.partitions.map(p => p.mi || 0))
+        : null,
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       timestamp: new Date().toISOString()
     };
   }
 
+<<<<<<< HEAD
+=======
+  /**
+   * 整合信息论 Φ 测量（Tononi）——量化意识整合度
+   * Φ = MI(整体) - Σ MI(最小分割的各部分)
+   * @param {number} miWhole - 系统整体的互信息
+   * @param {number[]} miParts - 各分割部分的互信息
+   * @returns {number} Φ ≥ 0，越大表示意识整合度越高
+   */
+  measurePhi(miWhole, miParts) {
+    // [FORMULA v5.14.0] 公式桥接直接计算 IIT Φ
+    try {
+      const { getFormulaBridge } = require('../formula/formula-bridge.js');
+      const bridge = getFormulaBridge();
+      if (bridge && typeof bridge.iitPhi === 'function') {
+        const phi = bridge.iitPhi(miWhole, Array.isArray(miParts) ? miParts : [miParts]);
+        if (typeof phi === 'number') return +phi.toFixed(4);
+      }
+    } catch (e) { /* fallback to registry */ }
+
+    // [FORMULA v5.14.0] 回退到注册表调用（兼容现有集成）
+    try {
+      const { getFormulaRegistry } = require('../formula/formula-registry.js');
+      const reg = getFormulaRegistry();
+      const phi = reg.call('calibration', 'iit_phi', miWhole, miParts);
+      return (typeof phi === 'number') ? +phi.toFixed(4) : Math.max(0, miWhole - (miParts || []).reduce((a, b) => a + b, 0));
+    } catch (e) {
+      return Math.max(0, miWhole - (miParts || []).reduce((a, b) => a + b, 0));
+    }
+  }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   _classifyNoema(lower) {
     // 感知性: 直接感官经验
     if (['看', '听', '感觉', '看到', '听到', 'perceive', 'see', 'hear', 'feel'].some(k => lower.includes(k))) {
@@ -333,7 +372,14 @@ class PhenomenologyEngine {
       primaryAction,
       bodyEnvironment,
       emotionalEmbodiment,
+<<<<<<< HEAD
       hasEmbodiedAwareness: primaryAction !== 'none' || bodyEnvironment.isEngaged
+=======
+      hasEmbodiedAwareness: primaryAction !== 'none' || bodyEnvironment.isEngaged,
+      // [v5.17.15 M1] 身体图式评分 — Merleau-Ponty 现象学
+      // 身体图式 = 身体动作识别 + 环境嵌入 + 情感具身
+      bodySchemaScore: +((primaryAction !== 'none' ? 0.4 : 0) + (bodyEnvironment.isEngaged ? 0.3 : 0) + (emotionalEmbodiment?.score || 0) * 0.3).toFixed(3),
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     };
   }
 

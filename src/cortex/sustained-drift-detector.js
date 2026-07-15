@@ -9,7 +9,11 @@
  * v5.7.7: Added persistence support (save/load to data/drift-history.json)
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const path = require('path');
 
 class SustainedDriftDetector {
@@ -148,6 +152,19 @@ class SustainedDriftDetector {
       timestamp: Date.now(),
     });
 
+<<<<<<< HEAD
+=======
+    // [v5.17.5] Ginzburg-Landau相变模型 — 检测认知相变
+    // 当漂移分数超过临界值时，系统可能经历认知相变（从有序→无序的状态转换）
+    try {
+      const { getFormulaBridge } = require('../formula/formula-bridge.js');
+      const bridge = getFormulaBridge();
+      const orderParam = 1 - Math.min(1, emaScore);  // 漂移越高，有序度越低
+      const phaseResult = bridge.ginzburgLandau(orderParam, emaScore, this.driftThreshold);
+      this._history[this._history.length - 1].phaseTransition = phaseResult;
+    } catch(e) { /* formula unavailable */ }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     // Keep history bounded to 3× windowSize (allows re-detection without data loss)
     const cap = this.windowSize * 3;
     if (this._history.length > cap) {

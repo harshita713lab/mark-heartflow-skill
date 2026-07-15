@@ -496,6 +496,25 @@ class MemoryQuality {
     return { shouldPrune, pruneResult, contamination, distribution };
   }
 
+<<<<<<< HEAD
+=======
+  /**
+   * 判断记忆是否可安全压缩/修剪。
+   * 高品質 LEARNED + CORE 记忆受保护，避免被压缩器清理。
+   *
+   * @param {object} memory
+   * @param {object} [options]
+   * @returns {{ protected: boolean, reason: string }}
+   */
+  isCompressible(memory, options = {}) {
+    const layer = (getField(memory, 'layer', 'learned') || 'learned').toUpperCase();
+    if (layer === 'CORE') return { protected: true, reason: 'core_layer' };
+    const quality = this.score(memory, options);
+    if (layer === 'LEARNED' && quality >= 0.85) return { protected: true, reason: 'high_quality_learned' };
+    return { protected: false, reason: 'ok', quality };
+  }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   // ─── 内部方法 ──────────────────────────────────────────
 
   _computeMaxAccess(memories) {

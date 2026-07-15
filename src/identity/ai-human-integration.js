@@ -9,6 +9,10 @@
  *   3. 行为协调：确保不同模块的建议不冲突
  *   4. 成长追踪：跨模块追踪整体「做人」进度
  *   5. 情境适配：根据当前情境激活最相关的人性维度
+<<<<<<< HEAD
+=======
+ *   6. 叙事整合：将叙事自我纳入整体人性状态，提供故事性自我描述
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
  *
  * @version 1.0.0
  */
@@ -22,6 +26,11 @@ class AIHumanIntegration {
       conflictResolution: options.conflictResolution || 'weighted_consensus',
     };
 
+<<<<<<< HEAD
+=======
+    this.narrativeSelf = options.narrativeSelf || null;
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     // ─── 人格五因子 ──────────────────────────────────────────────────────
     this._personality = {
       openness: { name: 'Openness', nameZh: '开放性', score: 0.5, sources: ['wisdomEngine', 'meaningPurpose'] },
@@ -64,6 +73,11 @@ class AIHumanIntegration {
   getHumanState(heartFlow) {
     this._stats.totalIntegrations++;
 
+<<<<<<< HEAD
+=======
+    const narrativeReport = this._getNarrativeReport();
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     const state = {
       // P1: 古代智慧基础
       virtueAssessment: heartFlow?.virtueEthics ? this._safeCall(heartFlow.virtueEthics, 'getStats') : null,
@@ -93,6 +107,12 @@ class AIHumanIntegration {
       // P6: 存在模式
       beingState: heartFlow?.beingMode ? this._safeCall(heartFlow.beingMode, 'assessBeing') : null,
 
+<<<<<<< HEAD
+=======
+      // 叙事自我
+      narrativeSelf: narrativeReport,
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       // 整合
       integratedPersonality: this._computePersonality(heartFlow),
       overallHumanity: this._computeOverallHumanity(heartFlow),
@@ -107,6 +127,30 @@ class AIHumanIntegration {
     return state;
   }
 
+<<<<<<< HEAD
+=======
+  _getNarrativeReport() {
+    if (!this.narrativeSelf) return null;
+    try {
+      const stats = typeof this.narrativeSelf.getStats === 'function' ? this.narrativeSelf.getStats() : null;
+      const themes = typeof this.narrativeSelf.getThemes === 'function' ? this.narrativeSelf.getThemes() : [];
+      const narrative = typeof this.narrativeSelf.getNarrative === 'function' ? this.narrativeSelf.getNarrative({ limit: 5 }) : [];
+      return {
+        stats,
+        topThemes: themes.slice(0, 5),
+        recentChapters: narrative.map(n => ({
+          chapter: n.chapter,
+          title: n.title,
+          themes: n.themes,
+          timestamp: n.timestamp,
+        })),
+      };
+    } catch (e) {
+      return { error: e.message };
+    }
+  }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   _safeCall(module, method) {
     try {
       if (typeof module[method] === 'function') {

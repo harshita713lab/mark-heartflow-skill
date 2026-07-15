@@ -187,6 +187,20 @@ class WisdomEngine {
       this._reflections = this._reflections.slice(-50);
     }
 
+<<<<<<< HEAD
+=======
+    // [v5.17.18 M4] 反思-修正闭环 — 检测同类错误是否复发
+    const similarPast = this._reflections.filter(r => 
+      r.situation && entry.situation && 
+      (r.situation.includes(entry.situation.substring(0, 20)) || entry.situation.includes(r.situation?.substring(0, 20)))
+    );
+    entry.recurrenceCheck = {
+      similarPastReflections: similarPast.length,
+      recurringPattern: similarPast.length > 1,
+      improvementSuggested: similarPast.length > 1 ? '检测到重复模式，建议深度修正' : null,
+    };
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     this._experiences.push({
       type: 'reflection',
       situation: situation || '',

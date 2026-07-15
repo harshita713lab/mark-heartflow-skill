@@ -13,7 +13,11 @@
  * 8. [IMPROVEMENT] calculateOverallScore() 增加数据驱动的加权计算
  */
 
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const fs = require('../utils/safe-fs');
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
 const { atomicWrite } = require('../utils/atomic-write');
 const path = require('path');
 
@@ -70,9 +74,13 @@ class Reflector {
       if (fs.existsSync(this.stateFile)) {
         return JSON.parse(fs.readFileSync(this.stateFile, 'utf8'));
       }
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.error: console.error('[Reflector] 加载状态失败:', e.message);
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return this.getDefaultState();
   }
 
@@ -98,9 +106,13 @@ class Reflector {
       if (fs.existsSync(this.goalsFile)) {
         return JSON.parse(fs.readFileSync(this.goalsFile, 'utf8'));
       }
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.warn: console.warn('[Reflector] 加载目标失败:', e.message);
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
     return {
       version: '2.2.1',
       goals: [],
@@ -118,9 +130,13 @@ class Reflector {
         fs.mkdirSync(dir, { recursive: true });
       }
       fs.writeFileSync(this.goalsFile, JSON.stringify(this.goals, null, 2));
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.warn: console.warn('[Reflector] 保存目标失败:', e.message);
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   /**
@@ -223,9 +239,13 @@ class Reflector {
         fs.mkdirSync(dir, { recursive: true });
       }
       fs.appendFileSync(this.logFile, entry);
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.warn: console.warn('[Reflector] 写入日志失败:', e.message);
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   /**
@@ -848,9 +868,13 @@ class Reflector {
 
     try {
       await atomicWrite(this.reportFile, JSON.stringify(reports, null, 2));
+<<<<<<< HEAD
     } catch (e) {
       // [PROD] 生产环境移除 console.error: console.error('[Reflector] 保存报告失败:', e.message);
     }
+=======
+    } catch (_) { /* [v5.9.18] intentional: graceful degradation */ }
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   /**
@@ -859,13 +883,17 @@ class Reflector {
    */
   printReport(report) {
     if (!report) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.error: console.error('[Reflector] 无报告可打印');
+=======
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
       return;
     }
 
     const line = '='.repeat(60);
     const subLine = '-'.repeat(40);
 
+<<<<<<< HEAD
     // [PROD] 生产环境移除 console.log: console.log('\n' + line);
     // [PROD] 生产环境移除 console.log: console.log('  HeartFlow 反思报告');
     // [PROD] 生产环境移除 console.log: console.log('  ' + report.timestamp);
@@ -913,12 +941,31 @@ class Reflector {
       if (report.trendAnalysis.changes) {
         for (const [key, change] of Object.entries(report.trendAnalysis.changes)) {
           // [PROD] 生产环境移除 console.log: console.log(`   ${key}: ${change.direction} (Δ${change.avgScoreDelta || change.rateDelta || change.effectivenessDelta || '?'})`);
+=======
+
+    // 综合评分
+
+    // 情绪分析
+
+    // 任务分析
+
+    // 反馈分析
+
+    // 人格分析
+
+    // 趋势分析
+    if (report.trendAnalysis) {
+
+      if (report.trendAnalysis.changes) {
+        for (const [key, change] of Object.entries(report.trendAnalysis.changes)) {
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
         }
       }
     }
 
     // 目标跟踪
     if (report.goalTracking) {
+<<<<<<< HEAD
       // [PROD] 生产环境移除 console.log: console.log(`\n🎯 目标跟踪:`);
       // [PROD] 生产环境移除 console.log: console.log(subLine);
       // [PROD] 生产环境移除 console.log: console.log(`   活跃: ${report.goalTracking.active_goals}`);
@@ -940,6 +987,18 @@ class Reflector {
     }
 
     // [PROD] 生产环境移除 console.log: console.log('\n' + line + '\n');
+=======
+    }
+
+    // 改进建议
+    if (report.improvements && report.improvements.length > 0) {
+      for (const imp of report.improvements) {
+        const icon = imp.priority === 'high' ? '🔴' : imp.priority === 'medium' ? '🟡' : '🟢';
+      }
+    } else {
+    }
+
+>>>>>>> e84538af12ba8f9d63816fdf6cfc2e2b929be321
   }
 
   /**
